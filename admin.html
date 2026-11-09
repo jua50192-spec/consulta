@@ -113,7 +113,8 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     <span class="k">Consulta interna del PRM</span>
     <h1>Entrada del administrador</h1>
     <div class="f"><label for="aCed">Número de cédula</label><input id="aCed" type="tel" inputmode="numeric" placeholder="000-0000000-0" autocomplete="off"></div>
-    <div class="f"><label for="aPin">PIN de 6 dígitos</label><input id="aPin" type="password" inputmode="numeric" maxlength="6"></div>
+    <div class="f"><label for="aPin">PIN de 6 dígitos</label><input id="aPin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></div>
+    <label style="display:flex;gap:8px;align-items:center;font-size:14px;margin:-4px 0 4px"><input type="checkbox" id="verPin" style="width:auto"> Ver el PIN que escribí</label>
     <p class="errmsg" id="lErr" hidden></p>
     <button type="submit" class="pri">Entrar</button>
     <p class="note">Es la misma entrada que usan los encuestadores. La app revisa el rol de cada cédula: los encuestadores van al formulario y el administrador a este tablero.</p>
@@ -430,9 +431,10 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
   const aCed=$("aCed"); aCed.addEventListener("input",()=>{const d=aCed.value.replace(/\D/g,"").slice(0,11);aCed.value=d.length>10?fmtCed(d):d.length>3?`${d.slice(0,3)}-${d.slice(3)}`:d;});
   $("lForm").addEventListener("submit",e=>{e.preventDefault(); const err=$("lErr"); const show=m=>{err.textContent=m;err.hidden=false;};
     const d=aCed.value.replace(/\D/g,""); if(d.length!==11) return show("Escriba su cédula completa (11 dígitos).");
-    const u=ADMINS[d]; if(!u||u.pin!==$("aPin").value) return show("Cédula o PIN incorrectos.");
+    const u=ADMINS[d]; const pin=$("aPin").value.replace(/\D/g,""); if(!u||u.pin!==pin) return show("Cédula o PIN incorrectos.");
     if(u.rol!=="admin") return show("Esta cuenta es de encuestador. Use la app del formulario; aquí solo entra el administrador.");
     err.hidden=true; $("adminName").textContent="Administrador: "+u.nombre; $("login").hidden=true; $("panel").hidden=false; $("aPin").value=""; window.scrollTo(0,0);});
+  $("verPin").addEventListener("change",e=>{$("aPin").type=e.target.checked?"text":"password";});
   $("logout").addEventListener("click",()=>{$("panel").hidden=true; $("login").hidden=false;});
   DATA=generate(); render(); renderReg();
 })();
