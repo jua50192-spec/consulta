@@ -12,6 +12,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Public+Sans:wght@400;500;600&display=swap">
 <style>
+[hidden]{display:none!important}
 /* Layout: un celular centrado con el formulario por pasos; barra de progreso arriba y botones abajo */
 :root{
   --bg:#e9ecf2; --phone:#ffffff; --ink:#18202e; --muted:#5d6678; --line:#dfe2ea; --soft:#f1f3f7;
@@ -168,11 +169,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
       <div class="q"><span class="ql">Edad</span>${radios("edad",["18–35","36–45","46–59","60 o más"],"two")}</div>
       <div class="q"><span class="ql">¿Es miembro o está inscrito en el PRM?</span>${radios("miembro",["Sí","No"],true)}</div>
       <div class="q" id="insQ" ${st.miembro==="No"?"":"hidden"}><span class="ql">¿Desea inscribirse en el partido?</span>${radios("ins",["Sí","No"],true)}
-        <a class="link" id="insLink" href="#" ${st.ins==="Sí"?"":"hidden"} onclick="return false">Inscribirme en el PRM (enlace oficial pendiente)</a></div>
+        <div id="insBox" ${st.ins==="Sí"?"":"hidden"} style="display:grid;gap:8px;margin-top:8px">
+          <a class="link" id="insLink" href="#" target="_blank" rel="noopener" onclick="return false">Inscribirme en el PRM (enlace oficial pendiente)</a>
+          <label class="opt"><input type="checkbox" id="insConf" ${st.insConf?"checked":""}>Inscripción confirmada</label>
+          <p class="small">Marque esta casilla solo cuando la página oficial del partido muestre que la persona quedó inscrita. Si no terminó, déjela sin marcar.</p></div></div>
       <p class="err" id="e" hidden>Complete sector, calle y todas las opciones.</p>`,
       after:()=>{document.querySelectorAll('input[name=miembro]').forEach(r=>r.addEventListener("change",()=>{$("insQ").hidden=val("miembro")!=="No";}));
-        document.querySelectorAll('input[name=ins]').forEach(r=>r.addEventListener("change",()=>{$("insLink").hidden=val("ins")!=="Sí";}));},
-      save:()=>{Object.assign(st,{prov:$("prov").value,sect:$("sect").value.trim(),calle:$("calle").value.trim(),sexo:val("sexo"),edad:val("edad"),miembro:val("miembro"),ins:val("ins")});
+        document.querySelectorAll('input[name=ins]').forEach(r=>r.addEventListener("change",()=>{$("insBox").hidden=val("ins")!=="Sí";}));},
+      save:()=>{Object.assign(st,{prov:$("prov").value,sect:$("sect").value.trim(),calle:$("calle").value.trim(),sexo:val("sexo"),edad:val("edad"),miembro:val("miembro"),ins:val("ins"),insConf:val("miembro")==="No"&&val("ins")==="Sí"&&$("insConf").checked});
         const ok=st.sect&&st.calle&&st.sexo&&st.edad&&st.miembro&&(st.miembro==="Sí"||st.ins);if(!ok)$("e").hidden=false;return !!ok;}},
     {t:"Preferencia",btn:"Siguiente",html:()=>`
       <div class="step">Paso 3 de 4</div><h2>¿Cuál de estos aspirantes prefiere como candidato presidencial del PRM?</h2>

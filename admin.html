@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
+[hidden]{display:none!important}
 /* Layout: barra de filtros fija arriba, cifras clave, luego rejilla de tarjetas de 2 columnas que se apila en el celular */
 :root{
   --bg:#f3f4f7; --panel:#ffffff; --ink:#18202e; --muted:#5d6678; --line:#dfe2ea; --soft:#eceef3;
@@ -105,6 +106,23 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
 .priv p{margin:0;color:var(--muted);flex:1 1 300px}
 .bar .p b{font-weight:600;color:var(--ink)} .bar .p span{color:var(--muted)}
 @media (max-width:520px){.bar{grid-template-columns:92px 1fr 104px}.kpi .v{font-size:24px}}
+.rephead{display:none}
+.rep tfoot td{font-weight:700;border-top:1px solid var(--line)}
+@media print{
+  @page{size:letter;margin:14mm}
+  body{background:#fff!important;color:#000!important}
+  #login,.tip,#panel>:not(.grid),.grid>:not(#rep){display:none!important}
+  #panel{padding:0;max-width:none}
+  #rep{display:block;border:0;padding:0;box-shadow:none;background:#fff;color:#000}
+  #rep h3{margin:16px 0 4px!important;break-after:avoid}
+  #rep tr{break-inside:avoid}
+  #rep td{padding:4px 8px}
+  #rep .noprint{display:none!important}
+  #rep .rephead{display:block}
+  #rep .tw{overflow:visible}
+  #rep td,#rep th{color:#000;border-color:#999}
+  #rep .note{color:#333}
+}
 @media (prefers-reduced-motion:reduce){.fill,.day{transition:none}}
 </style>
 
@@ -153,6 +171,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     <div class="kpi"><span class="k">Va primero</span><span class="v" id="kLead" style="font-size:20px">—</span><span class="s" id="kLeadS"></span></div>
     <div class="kpi"><span class="k">Ninguno</span><span class="v" id="kNin">0%</span><span class="s">de las preferencias</span></div>
     <div class="kpi"><span class="k">Desean inscribirse</span><span class="v" id="kIns">0</span><span class="s" id="kInsS"></span></div>
+    <div class="kpi"><span class="k">Confirmados</span><span class="v" id="kConf">0</span><span class="s" id="kConfS"></span></div>
     <div class="kpi"><span class="k">Hoy</span><span class="v" id="kHoy">0</span><span class="s">consultas enviadas</span></div>
   </section>
 
@@ -194,12 +213,32 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
         <tbody id="tReg"></tbody>
       </table></div>
     </div>
+    <div class="card wide" id="rep">
+      <div class="rephead">
+        <h2 style="font-size:18px">Reporte de inscripciones · Consulta interna del PRM</h2>
+        <p class="note" id="repMeta"></p>
+      </div>
+      <div class="priv">
+        <div><h2 class="noprint">Reporte de inscripciones</h2><p><b>Desean inscribirse:</b> personas que no eran miembros y dijeron que sí. <b>Confirmados:</b> el encuestador marcó que la página oficial del partido mostró la inscripción. Solo totales, sin nombres ni cédulas, y sin el voto.</p></div>
+        <button type="button" class="pri noprint" id="print">Imprimir / Guardar en PDF</button>
+      </div>
+      <p class="note noprint">Usa los mismos filtros de arriba (por ejemplo, una provincia o un encuestador). En la ventana de imprimir, elige <b>Guardar como PDF</b>.</p>
+      <h3 style="margin:4px 0 0;font-size:14px">Por sector</h3>
+      <div class="tw"><table class="rep">
+        <thead><tr><th>Provincia</th><th>Sector</th><th class="num">Desean inscribirse</th><th class="num">Confirmados</th><th class="num">% confirmados</th></tr></thead>
+        <tbody id="rSect"></tbody><tfoot id="rSectT"></tfoot>
+      </table></div>
+      <h3 style="margin:8px 0 0;font-size:14px">Por encuestador</h3>
+      <div class="tw"><table class="rep">
+        <thead><tr><th>Encuestador</th><th class="num">Desean inscribirse</th><th class="num">Confirmados</th><th class="num">% confirmados</th></tr></thead>
+        <tbody id="rEnc"></tbody><tfoot id="rEncT"></tfoot>
+      </table></div>
+      <p class="rephead note" id="repDemo"></p>
+    </div>
     <div class="card wide">
       <div class="priv">
         <div><h2>Verificación de cédulas</h2><p>Sección privada del administrador. Las fotos se guardan aparte del voto, se abren con un enlace que vence en minutos y se borran al terminar la consulta.</p></div>
-        <button type="button" id="dl">Descargar Excel</button>
       </div>
-      <p class="note" id="dlMsg" hidden>En la versión real, este botón descarga todas las consultas en Excel. En esta vista previa no descarga nada.</p>
     </div>
   </section>
 </div>
@@ -256,6 +295,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
         ...(()=>{const pv=pick(PROVS,provW); const ss=SECT[pv]; return {prov:pv, sect:ss[Math.floor(Math.random()*ss.length)], calle:CALLES[Math.floor(Math.random()*(4+Math.random()*6))]};})(), sexo: Math.random()<0.52?"Femenino":"Masculino",
         edad: pick(EDADES,[1.1,1.3,1,0.7]), miembro: miembro?"Sí":"No",
         inscribir: !miembro && Math.random()<0.38,
+        confirmado: false,
         pref, seg, seguro: Math.random()<(pref===NIN?0.3:0.55+Math.random()*0.25)?"Muy seguro":"Puede cambiar",
         ges: CANDS.map((c,ci)=>pick(GES,gesBias[ci])),
         enc: pick(ENC,encW), fecha, foto: Math.random()<0.93
@@ -264,6 +304,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     // un encuestador con pocas fotos, para mostrar la alerta
     const raro = ENC[Math.floor(Math.random()*ENC.length)];
     out.forEach(r=>{ if(r.enc===raro && Math.random()<0.45) r.foto=false; });
+    out.forEach(r=>{ if(r.inscribir) r.confirmado = Math.random()<0.62; });
     return out;
   }
 
@@ -347,6 +388,8 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     $("kNin").textContent= total? pf(prefCounts[4].v/total):"—";
     const ins=rows.filter(r=>r.inscribir).length, noMiem=rows.filter(r=>r.miembro==="No").length;
     $("kIns").textContent=nf.format(ins); $("kInsS").textContent=noMiem?`${pf(ins/noMiem)} de los no inscritos`:"";
+    const conf=rows.filter(r=>r.confirmado).length;
+    $("kConf").textContent=nf.format(conf); $("kConfS").textContent=ins?`${pf(conf/ins)} de los que desean inscribirse`:"";
     $("kHoy").textContent=nf.format(rows.filter(r=>r.fecha.toDateString()===today.toDateString()).length);
 
     // días
@@ -389,8 +432,28 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
         const td=document.createElement("td"); const p=document.createElement("span"); p.className="pill "+(ok?"ok":"bad"); p.textContent=x.n?(ok?"Normal":"Revisar fotos"):"Sin datos"; td.append(p); tr.append(td);
         tb.append(tr);
       });
+    renderRep();
   }
 
+  // Reporte de inscripciones: solo totales. Usa los filtros, pero nunca el filtro por aspirante (el voto no se mezcla con la inscripción).
+  function cellRow(host,vals,numFrom){const tr=document.createElement("tr");vals.forEach((v,i)=>{const td=document.createElement("td");if(i>=numFrom)td.className="num";td.textContent=v;tr.append(td);});host.append(tr);}
+  function renderRep(){
+    const base=filtered(false).filter(r=>r.inscribir);
+    const pc=(c,i)=>i?pf(c/i):"—";
+    const rs=$("rSect"); rs.replaceChildren();
+    [...new Set(base.map(r=>r.prov+"|"+r.sect))].map(k=>{const [pv,sc]=k.split("|");const s=base.filter(r=>r.prov===pv&&r.sect===sc);return {pv,sc,i:s.length,c:s.filter(r=>r.confirmado).length};})
+      .sort((a,b)=>b.i-a.i).forEach(x=>cellRow(rs,[x.pv,x.sc,nf.format(x.i),nf.format(x.c),pc(x.c,x.i)],2));
+    if(!base.length) cellRow(rs,["Sin datos con estos filtros","","","",""],9);
+    const I=base.length,C=base.filter(r=>r.confirmado).length;
+    $("rSectT").replaceChildren(); cellRow($("rSectT"),["Total","",nf.format(I),nf.format(C),pc(C,I)],2);
+    const re=$("rEnc"); re.replaceChildren();
+    ENC.map(e=>{const s=base.filter(r=>r.enc===e);return {e,i:s.length,c:s.filter(r=>r.confirmado).length};}).filter(x=>x.i).sort((a,b)=>b.i-a.i)
+      .forEach(x=>cellRow(re,[x.e,nf.format(x.i),nf.format(x.c),pc(x.c,x.i)],1));
+    $("rEncT").replaceChildren(); cellRow($("rEncT"),["Total",nf.format(I),nf.format(C),pc(C,I)],1);
+    const act=[["fProv"],["fSect","Sector "],["fSexo"],["fEdad"],["fMiem","Miembro: "],["fEnc"]].map(([id,p])=>$(id).value?(p||"")+$(id).value:null).filter(Boolean);
+    $("repMeta").textContent=`Fecha: ${new Date().toLocaleString("es-DO",{dateStyle:"long",timeStyle:"short"})} · Preparado por: ${$("adminName").textContent.replace("Administrador: ","")} · Filtros: ${act.length?act.join(", "):"ninguno (todo)"}`;
+    $("repDemo").textContent="DATOS DE EJEMPLO: estos números son inventados para mostrar el formato. No son resultados reales.";
+  }
   function renderReg(){
     const tb=$("tReg"); tb.replaceChildren();
     REGISTRO.forEach(r=>{
@@ -426,7 +489,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     $("nNom").value=""; ced.value=""; showCode(r);});
   $("clear").addEventListener("click",()=>{["fProv","fSexo","fEdad","fMiem","fEnc"].forEach(id=>$(id).value=""); fillSect(); $("fSect").value=""; openSect=null; sel=null; render();});
   $("regen").addEventListener("click",()=>{DATA=generate(); sel=null; render(); renderReg();});
-  $("dl").addEventListener("click",()=>{$("dlMsg").hidden=false;});
+  $("print").addEventListener("click",()=>{renderRep(); window.print();});
   const ADMINS={"00100000011":{nombre:"Antonio Hernández",pin:"905317",rol:"admin"},"40212345671":{nombre:"María Santos",pin:"731904",rol:"encuestador"}};
   const aCed=$("aCed"); aCed.addEventListener("input",()=>{const d=aCed.value.replace(/\D/g,"").slice(0,11);aCed.value=d.length>10?fmtCed(d):d.length>3?`${d.slice(0,3)}-${d.slice(3)}`:d;});
   $("lForm").addEventListener("submit",e=>{e.preventDefault(); const err=$("lErr"); const show=m=>{err.textContent=m;err.hidden=false;};
