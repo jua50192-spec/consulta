@@ -107,7 +107,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 (() => {
   const CANDS=["Carolina Mejía","David Collado","Wellington Arnaud","Guido Gómez Mazara"];
   const GES=["Excelente","Buena","Regular","Mala","No conoce su gestión"];
-  const PROVS=["Distrito Nacional","Santo Domingo","Santiago","La Vega","San Cristóbal","Puerto Plata","La Altagracia","Duarte"];
+  // Las 31 provincias y el Distrito Nacional.
+  const PROVS=["Azua","Bahoruco","Barahona","Dajabón","Distrito Nacional","Duarte","El Seibo","Elías Piña","Espaillat","Hato Mayor","Hermanas Mirabal","Independencia","La Altagracia","La Romana","La Vega","María Trinidad Sánchez","Monseñor Nouel","Monte Cristi","Monte Plata","Pedernales","Peravia","Puerto Plata","Samaná","San Cristóbal","San José de Ocoa","San Juan","San Pedro de Macorís","Sánchez Ramírez","Santiago","Santiago Rodríguez","Santo Domingo","Valverde"];
+  // Sectores que cargó el administrador (en la versión real vienen de la base de datos; aquí son de ejemplo).
+  const SECTORES={"Distrito Nacional":["Gualey","Capotillo","Cristo Rey","Villa Juana","Los Guandules"],"Santo Domingo":["Los Mina","Villa Mella","Los Alcarrizos","Sabana Perdida","Invivienda"],"Santiago":["Cienfuegos","Pekín","Los Salados","Gurabo"],"La Vega":["Villa Rosa","Palmarito","Las Carolinas"],"San Cristóbal":["Madre Vieja","Canastica","Lavapiés"],"Puerto Plata":["Padre Granero","Los Domínguez","San Marcos"],"La Altagracia":["Juan Pablo Duarte","Villa Cerro","Friusa"],"Duarte":["Los Rieles","Vista al Valle","Pueblo Nuevo"]};
+  const sectOpts=(pv,cur)=>{const l=SECTORES[pv]||[];return l.length?`<option value="">Elija el sector</option>`+l.map(x=>`<option ${cur===x?"selected":""}>${esc(x)}</option>`).join(""):`<option value="">No hay sectores cargados</option>`;};
   const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
   let step=0, st={}, order=shuffle(CANDS), hechas=0;
   const REG={"00112345678":{nombre:"Juan Pérez",codigo:"482915",pin:null,estado:"Pendiente"},
@@ -162,8 +166,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
     {t:"Datos",btn:"Siguiente",html:()=>`
       <div class="step">Paso 2 de 4</div><h2>Datos de la persona</h2>
       <div class="gps">Ubicación y hora registradas</div>
-      <div class="q"><label for="prov">Provincia</label><select id="prov">${PROVS.map(p=>`<option ${st.prov===p?"selected":""}>${p}</option>`).join("")}</select></div>
-      <div class="q"><label for="sect">Sector o barrio</label><input type="text" id="sect" placeholder="Ej.: Los Mina" value="${esc(st.sect||"")}"></div>
+      <div class="q"><label for="prov">Provincia</label><select id="prov"><option value="">Elija la provincia</option>${PROVS.map(p=>`<option ${st.prov===p?"selected":""}>${p}</option>`).join("")}</select></div>
+      <div class="q"><label for="sect">Sector o barrio</label><select id="sect">${st.prov?sectOpts(st.prov,st.sect):`<option value="">Primero elija la provincia</option>`}</select>
+        <p class="small" id="sinSect" ${st.prov&&!(SECTORES[st.prov]||[]).length?"":"hidden"}>Esta provincia todavía no tiene sectores. Pida al administrador que los agregue.</p></div>
       <div class="q"><label for="calle">Calle</label><input type="text" id="calle" placeholder="Ej.: Calle Principal" value="${esc(st.calle||"")}"></div>
       <div class="q"><span class="ql">Sexo</span>${radios("sexo",["Femenino","Masculino"],true)}</div>
       <div class="q"><span class="ql">Edad</span>${radios("edad",["18–35","36–45","46–59","60 o más"],"two")}</div>
@@ -173,11 +178,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
           <a class="link" id="insLink" href="#" target="_blank" rel="noopener" onclick="return false">Inscribirme en el PRM (enlace oficial pendiente)</a>
           <label class="opt"><input type="checkbox" id="insConf" ${st.insConf?"checked":""}>Inscripción confirmada</label>
           <p class="small">Marque esta casilla solo cuando la página oficial del partido muestre que la persona quedó inscrita. Si no terminó, déjela sin marcar.</p></div></div>
-      <p class="err" id="e" hidden>Complete sector, calle y todas las opciones.</p>`,
-      after:()=>{document.querySelectorAll('input[name=miembro]').forEach(r=>r.addEventListener("change",()=>{$("insQ").hidden=val("miembro")!=="No";}));
+      <p class="err" id="e" hidden>Complete provincia, sector, calle y todas las opciones.</p>`,
+      after:()=>{$("prov").addEventListener("change",()=>{const pv=$("prov").value;$("sect").innerHTML=pv?sectOpts(pv,""):`<option value="">Primero elija la provincia</option>`;$("sinSect").hidden=!pv||(SECTORES[pv]||[]).length>0;});
+        document.querySelectorAll('input[name=miembro]').forEach(r=>r.addEventListener("change",()=>{$("insQ").hidden=val("miembro")!=="No";}));
         document.querySelectorAll('input[name=ins]').forEach(r=>r.addEventListener("change",()=>{$("insBox").hidden=val("ins")!=="Sí";}));},
-      save:()=>{Object.assign(st,{prov:$("prov").value,sect:$("sect").value.trim(),calle:$("calle").value.trim(),sexo:val("sexo"),edad:val("edad"),miembro:val("miembro"),ins:val("ins"),insConf:val("miembro")==="No"&&val("ins")==="Sí"&&$("insConf").checked});
-        const ok=st.sect&&st.calle&&st.sexo&&st.edad&&st.miembro&&(st.miembro==="Sí"||st.ins);if(!ok)$("e").hidden=false;return !!ok;}},
+      save:()=>{Object.assign(st,{prov:$("prov").value,sect:$("sect").value,calle:$("calle").value.trim(),sexo:val("sexo"),edad:val("edad"),miembro:val("miembro"),ins:val("ins"),insConf:val("miembro")==="No"&&val("ins")==="Sí"&&$("insConf").checked});
+        const ok=st.prov&&st.sect&&st.calle&&st.sexo&&st.edad&&st.miembro&&(st.miembro==="Sí"||st.ins);if(!ok)$("e").hidden=false;return !!ok;}},
     {t:"Preferencia",btn:"Siguiente",html:()=>`
       <div class="step">Paso 3 de 4</div><h2>¿Cuál de estos aspirantes prefiere como candidato presidencial del PRM?</h2>
       ${radios("pref",[...order,"Ninguno"])}

@@ -235,6 +235,20 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
       </table></div>
       <p class="rephead note" id="repDemo"></p>
     </div>
+    <div class="card wide" id="sectCard">
+      <div><h2>Sectores por provincia</h2><p class="note">El encuestador solo puede elegir los sectores de esta lista. Así todos escriben el sector igual y los números no se dividen. Un sector solo se puede quitar si todavía no tiene consultas.</p></div>
+      <form class="addrow" id="sForm" novalidate>
+        <div class="f"><label for="sProv">Provincia</label><select id="sProv"></select></div>
+        <div class="f"><label for="sNom">Nombre del sector o barrio</label><input id="sNom" type="text" placeholder="Ej.: Los Mina" autocomplete="off"></div>
+        <button type="submit" class="pri">Agregar sector</button>
+      </form>
+      <p class="errmsg" id="sErr" hidden></p>
+      <p class="note" id="sOk" hidden></p>
+      <div class="tw"><table>
+        <thead><tr><th>Sector</th><th class="num">Consultas</th><th>Acción</th></tr></thead>
+        <tbody id="tSec"></tbody>
+      </table></div>
+    </div>
     <div class="card wide">
       <div class="priv">
         <div><h2>Verificación de cédulas</h2><p>Sección privada del administrador. Las fotos se guardan aparte del voto, se abren con un enlace que vence en minutos y se borran al terminar la consulta.</p></div>
@@ -249,7 +263,8 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
   const CANDS = ["Carolina Mejía","David Collado","Wellington Arnaud","Guido Gómez Mazara"];
   const CCOL = ["var(--c1)","var(--c2)","var(--c3)","var(--c4)"];
   const NIN = "Ninguno";
-  const PROVS = ["Distrito Nacional","Santo Domingo","Santiago","La Vega","San Cristóbal","Puerto Plata","La Altagracia","Duarte"];
+  const PROVS = ["Distrito Nacional","Santo Domingo","Santiago","La Vega","San Cristóbal","Puerto Plata","La Altagracia","Duarte"]; // solo para los datos de ejemplo
+  const TODAS = ["Azua","Bahoruco","Barahona","Dajabón","Distrito Nacional","Duarte","El Seibo","Elías Piña","Espaillat","Hato Mayor","Hermanas Mirabal","Independencia","La Altagracia","La Romana","La Vega","María Trinidad Sánchez","Monseñor Nouel","Monte Cristi","Monte Plata","Pedernales","Peravia","Puerto Plata","Samaná","San Cristóbal","San José de Ocoa","San Juan","San Pedro de Macorís","Sánchez Ramírez","Santiago","Santiago Rodríguez","Santo Domingo","Valverde"]; // las 31 provincias y el Distrito Nacional
   const SECT = {
     "Distrito Nacional":["Gualey","Capotillo","Cristo Rey","Villa Juana","Los Guandules"],
     "Santo Domingo":["Los Mina","Villa Mella","Los Alcarrizos","Sabana Perdida","Invivienda"],
@@ -312,8 +327,8 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     const s=$(id); s.replaceChildren(new Option("Todos",""), ...opts.map(o=>new Option(o,o)));
     s.addEventListener("change", render);
   }
-  fillSelect("fProv","Provincia",PROVS);
-  const fillSect=()=>{const pv=$("fProv").value; const opts=pv?SECT[pv]:Object.values(SECT).flat(); const cur=$("fSect").value;
+  fillSelect("fProv","Provincia",TODAS);
+  const fillSect=()=>{const pv=$("fProv").value; const opts=pv?(SECT[pv]||[]):Object.values(SECT).flat(); const cur=$("fSect").value;
     $("fSect").replaceChildren(new Option("Todos",""),...opts.map(o=>new Option(o,o))); $("fSect").value=opts.includes(cur)?cur:"";};
   fillSect(); $("fProv").addEventListener("change",()=>{fillSect();render();},{capture:true}); $("fSect").addEventListener("change",render); fillSelect("fSexo","Sexo",["Femenino","Masculino"]);
   fillSelect("fEdad","Edad",EDADES); fillSelect("fMiem","Miembro",["Sí","No"]); fillSelect("fEnc","Encuestador",ENC);
@@ -467,6 +482,30 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     $("repMeta").textContent=`Fecha: ${new Date().toLocaleString("es-DO",{dateStyle:"long",timeStyle:"short"})} · Preparado por: ${$("adminName").textContent.replace("Administrador: ","")} · Filtros: ${act.length?act.join(", "):"ninguno (todo)"}`;
     $("repDemo").textContent="DATOS DE EJEMPLO: estos números son inventados para mostrar el formato. No son resultados reales.";
   }
+  // Sectores por provincia (los carga el administrador)
+  const norm=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
+  const sProv=$("sProv"); sProv.replaceChildren(...TODAS.map(p=>new Option(p,p))); sProv.value="Santo Domingo";
+  function renderSec(){
+    const pv=sProv.value, l=SECT[pv]||[], tb=$("tSec"); tb.replaceChildren();
+    if(!l.length){const tr=document.createElement("tr");const td=document.createElement("td");td.colSpan=3;td.textContent="Esta provincia todavía no tiene sectores. Agregue el primero arriba.";td.className="note";tr.append(td);tb.append(tr);return;}
+    [...l].sort((a,b)=>a.localeCompare(b,"es")).forEach(sc=>{
+      const n=DATA.filter(r=>r.prov===pv&&r.sect===sc).length;
+      const tr=document.createElement("tr");
+      const t1=document.createElement("td");t1.textContent=sc;
+      const t2=document.createElement("td");t2.className="num";t2.textContent=nf.format(n);
+      const t3=document.createElement("td");const bt=document.createElement("button");bt.type="button";bt.textContent="Quitar";bt.style.cssText="padding:4px 9px;font-size:12px";
+      if(n){bt.disabled=true;bt.title="Tiene consultas: no se puede quitar";bt.style.opacity=.45;}
+      bt.addEventListener("click",()=>{SECT[pv]=l.filter(x=>x!==sc);$("sOk").textContent=`Se quitó "${sc}" de ${pv}.`;$("sOk").hidden=false;fillSect();renderSec();});
+      t3.append(bt);tr.append(t1,t2,t3);tb.append(tr);});
+  }
+  sProv.addEventListener("change",()=>{$("sErr").hidden=true;$("sOk").hidden=true;renderSec();});
+  $("sForm").addEventListener("submit",e=>{e.preventDefault();
+    const pv=sProv.value, nom=$("sNom").value.replace(/\s+/g," ").trim(), err=$("sErr"), ok=$("sOk"); ok.hidden=true;
+    if(nom.length<3){err.textContent="Escriba el nombre del sector (al menos 3 letras).";err.hidden=false;return;}
+    const ya=(SECT[pv]||[]).find(x=>norm(x)===norm(nom));
+    if(ya){err.textContent=`"${ya}" ya está en ${pv}.`;err.hidden=false;return;}
+    err.hidden=true; (SECT[pv]=SECT[pv]||[]).push(nom); $("sNom").value="";
+    ok.textContent=`Se agregó "${nom}" a ${pv}. Cuando conectemos la base de datos, aparecerá en el formulario de los encuestadores.`; ok.hidden=false; fillSect(); renderSec();});
   function renderReg(){
     const tb=$("tReg"); tb.replaceChildren();
     REGISTRO.forEach(r=>{
@@ -501,7 +540,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     err.hidden=true; const r={nombre:nom,ced:fmtCed(d),estado:"Pendiente",codigo:newCode()}; REGISTRO.unshift(r);
     $("nNom").value=""; ced.value=""; showCode(r);});
   $("clear").addEventListener("click",()=>{["fProv","fSexo","fEdad","fMiem","fEnc"].forEach(id=>$(id).value=""); fillSect(); $("fSect").value=""; openSect=null; sel=null; render();});
-  $("regen").addEventListener("click",()=>{DATA=generate(); sel=null; render(); renderReg();});
+  $("regen").addEventListener("click",()=>{DATA=generate(); sel=null; render(); renderReg(); renderSec();});
   $("print").addEventListener("click",()=>{renderRep(); window.print();});
   const ADMINS={"00100000011":{nombre:"Antonio Hernández",pin:"905317",rol:"admin"},"40212345671":{nombre:"María Santos",pin:"731904",rol:"encuestador"}};
   const aCed=$("aCed"); aCed.addEventListener("input",()=>{const d=aCed.value.replace(/\D/g,"").slice(0,11);aCed.value=d.length>10?fmtCed(d):d.length>3?`${d.slice(0,3)}-${d.slice(3)}`:d;});
@@ -512,7 +551,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     err.hidden=true; $("adminName").textContent="Administrador: "+u.nombre; $("login").hidden=true; $("panel").hidden=false; $("aPin").value=""; window.scrollTo(0,0);});
   $("verPin").addEventListener("change",e=>{$("aPin").type=e.target.checked?"text":"password";});
   $("logout").addEventListener("click",()=>{$("panel").hidden=true; $("login").hidden=false;});
-  DATA=generate(); render(); renderReg();
+  DATA=generate(); render(); renderReg(); renderSec();
 })();
 </script>
 
