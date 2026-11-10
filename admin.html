@@ -18,7 +18,7 @@
 :root{
   --bg:#f3f4f7; --panel:#ffffff; --ink:#18202e; --muted:#5d6678; --line:#dfe2ea; --soft:#eceef3;
   --accent:#1f4fa3; --warn-bg:#fff4d6; --warn-ink:#7a5200; --warn-line:#e8c66a;
-  --c1:#1f4fa3; --c2:#0f8a7a; --c3:#b4552d; --c4:#7a4fb0; --c0:#9aa1ae;
+  --c1:#1f4fa3; --c2:#0f8a7a; --c3:#b4552d; --c4:#7a4fb0; --c5:#b8336a; --c0:#9aa1ae;
   --g1:#1d7a46; --g2:#7fbf6a; --g3:#e0b44a; --g4:#c8503c; --g5:#c3c8d2;
   --display:"Archivo", "Helvetica Neue", Arial, sans-serif;
   --body:"Public Sans", "Segoe UI", Arial, sans-serif;
@@ -27,12 +27,12 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#10141c; --panel:#171d28; --ink:#e7eaf1; --muted:#9aa3b5; --line:#2a3242; --soft:#212938;
   --accent:#7aa5f0; --warn-bg:#3a2f12; --warn-ink:#f2d07a; --warn-line:#6b5521;
-  --c1:#6f9cf0; --c2:#3fc2ae; --c3:#e58a5f; --c4:#b08ae6; --c0:#6c7484;
+  --c1:#6f9cf0; --c2:#3fc2ae; --c3:#e58a5f; --c4:#b08ae6; --c5:#ec7aa5; --c0:#6c7484;
   --g1:#3fb172; --g2:#93d27d; --g3:#e6c25e; --g4:#e3735e; --g5:#4a5263; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#10141c; --panel:#171d28; --ink:#e7eaf1; --muted:#9aa3b5; --line:#2a3242; --soft:#212938;
   --accent:#7aa5f0; --warn-bg:#3a2f12; --warn-ink:#f2d07a; --warn-line:#6b5521;
-  --c1:#6f9cf0; --c2:#3fc2ae; --c3:#e58a5f; --c4:#b08ae6; --c0:#6c7484;
+  --c1:#6f9cf0; --c2:#3fc2ae; --c3:#e58a5f; --c4:#b08ae6; --c5:#ec7aa5; --c0:#6c7484;
   --g1:#3fb172; --g2:#93d27d; --g3:#e6c25e; --g4:#e3735e; --g5:#4a5263; color-scheme:dark}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45}
 .wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px;display:grid;gap:16px}
@@ -260,8 +260,8 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
 
 <script>
 (() => {
-  const CANDS = ["Carolina Mejía","David Collado","Wellington Arnaud","Guido Gómez Mazara"];
-  const CCOL = ["var(--c1)","var(--c2)","var(--c3)","var(--c4)"];
+  const CANDS = ["Carolina Mejía","David Collado","Raquel Peña","Wellington Arnaud","Guido Gómez Mazara"];
+  const CCOL = ["var(--c1)","var(--c2)","var(--c5)","var(--c3)","var(--c4)"];
   const NIN = "Ninguno";
   const PROVS = ["Distrito Nacional","Santo Domingo","Santiago","La Vega","San Cristóbal","Puerto Plata","La Altagracia","Duarte"]; // solo para los datos de ejemplo
   const TODAS = ["Azua","Bahoruco","Barahona","Dajabón","Distrito Nacional","Duarte","El Seibo","Elías Piña","Espaillat","Hato Mayor","Hermanas Mirabal","Independencia","La Altagracia","La Romana","La Vega","María Trinidad Sánchez","Monseñor Nouel","Monte Cristi","Monte Plata","Pedernales","Peravia","Puerto Plata","Samaná","San Cristóbal","San José de Ocoa","San Juan","San Pedro de Macorís","Sánchez Ramírez","Santiago","Santiago Rodríguez","Santo Domingo","Valverde"]; // las 31 provincias y el Distrito Nacional
@@ -389,8 +389,8 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     $("active").textContent = act.length? "Viendo: "+act.join(" · "):"";
 
     // preferencia (sin el filtro del aspirante seleccionado)
-    const prefCounts=[...CANDS,NIN].map((c,i)=>({name:c,v:base.filter(r=>r.pref===c).length,color:i<4?CCOL[i]:"var(--c0)"}));
-    const ranked=[...prefCounts.slice(0,4)].sort((a,b)=>b.v-a.v);
+    const prefCounts=[...CANDS,NIN].map((c,i)=>({name:c,v:base.filter(r=>r.pref===c).length,color:i<CANDS.length?CCOL[i]:"var(--c0)"}));
+    const ranked=[...prefCounts.slice(0,CANDS.length)].sort((a,b)=>b.v-a.v);
     barList($("chPref"), prefCounts, total, {clickable:true, leadName: total?ranked[0].name:null});
 
     // KPIs
@@ -413,7 +413,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
       $("kLead").textContent= gap===0? "Empate" : ranked[0].name;
       $("kLeadS").textContent= gap===0? `${ranked[0].name} y ${ranked[1].name} con ${pf(ranked[0].v/total)} cada uno` : `${pf(ranked[0].v/total)} · ventaja de ${pf(gap/total)} sobre ${ranked[1].name}`;
     } else { $("kLeadK").textContent="Va primero"; $("kLead").textContent="—"; $("kLeadS").textContent="Sin consultas con estos filtros"; }
-    $("kNin").textContent= total? pf(prefCounts[4].v/total):"—";
+    $("kNin").textContent= total? pf(prefCounts[CANDS.length].v/total):"—";
     const ins=rows.filter(r=>r.inscribir).length, noMiem=rows.filter(r=>r.miembro==="No").length;
     $("kIns").textContent=nf.format(ins); $("kInsS").textContent=noMiem?`${pf(ins/noMiem)} de los no inscritos`:"";
     const conf=rows.filter(r=>r.confirmado).length;
