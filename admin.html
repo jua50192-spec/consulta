@@ -168,7 +168,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
 
   <section class="kpis" aria-label="Cifras clave">
     <div class="kpi"><span class="k">Consultas</span><span class="v" id="kTot">0</span><span class="s" id="kTotS"></span></div>
-    <div class="kpi"><span class="k">Va primero</span><span class="v" id="kLead" style="font-size:20px">—</span><span class="s" id="kLeadS"></span></div>
+    <div class="kpi"><span class="k" id="kLeadK">Va primero</span><span class="v" id="kLead" style="font-size:20px">—</span><span class="s" id="kLeadS"></span></div>
     <div class="kpi"><span class="k">Ninguno</span><span class="v" id="kNin">0%</span><span class="s">de las preferencias</span></div>
     <div class="kpi"><span class="k">Desean inscribirse</span><span class="v" id="kIns">0</span><span class="s" id="kInsS"></span></div>
     <div class="kpi"><span class="k">Confirmados</span><span class="v" id="kConf">0</span><span class="s" id="kConfS"></span></div>
@@ -381,10 +381,23 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     // KPIs
     $("kTot").textContent=nf.format(rows.length);
     $("kTotS").textContent = sel? `votantes de ${sel}` : `de ${nf.format(DATA.length)} en total`;
-    if(total){ const gap=ranked[0].v-ranked[1].v;
+    if(total && sel){
+      // Aspirante elegido: su porcentaje y en qué lugar va
+      const me=prefCounts.find(x=>x.name===sel);
+      $("kLeadK").textContent= sel===NIN? "Opción elegida" : "Aspirante elegido";
+      $("kLead").textContent=sel;
+      if(sel===NIN){ $("kLeadS").textContent=`${pf(me.v/total)} de las preferencias`; }
+      else {
+        const pos=ranked.filter(x=>x.v>me.v).length+1, empate=ranked.filter(x=>x.v===me.v).length>1;
+        const otro= pos===1 ? ranked.find(x=>x.name!==sel) : ranked[0];
+        const dif=Math.abs(me.v-otro.v)/total;
+        $("kLeadS").textContent = `${pf(me.v/total)} · ${pos}º lugar` + (empate? " (empatado)" : pos===1? ` · ventaja de ${pf(dif)} sobre ${otro.name}` : ` · a ${pf(dif)} de ${otro.name}`);
+      }
+    } else if(total){ const gap=ranked[0].v-ranked[1].v;
+      $("kLeadK").textContent="Va primero";
       $("kLead").textContent= gap===0? "Empate" : ranked[0].name;
       $("kLeadS").textContent= gap===0? `${ranked[0].name} y ${ranked[1].name} con ${pf(ranked[0].v/total)} cada uno` : `${pf(ranked[0].v/total)} · ventaja de ${pf(gap/total)} sobre ${ranked[1].name}`;
-    } else { $("kLead").textContent="—"; $("kLeadS").textContent="Sin consultas con estos filtros"; }
+    } else { $("kLeadK").textContent="Va primero"; $("kLead").textContent="—"; $("kLeadS").textContent="Sin consultas con estos filtros"; }
     $("kNin").textContent= total? pf(prefCounts[4].v/total):"—";
     const ins=rows.filter(r=>r.inscribir).length, noMiem=rows.filter(r=>r.miembro==="No").length;
     $("kIns").textContent=nf.format(ins); $("kInsS").textContent=noMiem?`${pf(ins/noMiem)} de los no inscritos`:"";
