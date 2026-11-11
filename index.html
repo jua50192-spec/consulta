@@ -89,6 +89,12 @@ input[type=text],input[type=password],input[type=tel],select{font:inherit;paddin
 .hint{background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5}
 .nav{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--line)}
 button{font:inherit;font-weight:600;border-radius:12px;padding:13px 14px;cursor:pointer;border:1px solid var(--line);background:var(--phone);color:var(--ink);flex:1}
+.salir{position:fixed;inset:0;z-index:50;background:rgba(10,14,24,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.salir .box{background:var(--phone);color:var(--ink);border-radius:16px;padding:22px 20px;max-width:340px;width:100%;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.salir h3{margin:0 0 8px;font-size:19px}
+.salir p{margin:0 0 18px;color:var(--muted);font-size:15px;line-height:1.45}
+.salir .acc{display:flex;gap:10px}
+.salir .acc button{flex:1;padding:13px 10px;font-size:16px}
 button.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);flex:2}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .done{display:grid;justify-items:center;text-align:center;gap:10px;padding-top:40px}
@@ -107,6 +113,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   </form>
 </div>
 
+<div class="salir" id="salir" hidden role="dialog" aria-modal="true" aria-labelledby="salirT">
+  <div class="box">
+    <h3 id="salirT">¿Desea salir de la aplicación?</h3>
+    <p id="salirP">Si sale ahora, la consulta que no ha enviado se puede perder.</p>
+    <div class="acc"><button type="button" class="pri" id="salirNo">Quedarme</button><button type="button" id="salirSi">Salir</button></div>
+  </div>
+</div>
 <script>
 (() => {
   const CANDS=["Carolina Mejía","David Collado","Raquel Peña","Wellington Arnaud","Guido Gómez Mazara"];
@@ -284,7 +297,39 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   const volvio=loadState();
   show();
   if(volvio&&step===4){const n=document.createElement("p");n.className="hint";n.textContent="Se recuperó la consulta en curso. Si la foto no aparece, tómela otra vez o use “Elegir de la galería”.";$("screen").prepend(n);}
+  // ===== Botón "atrás" del celular: preguntar antes de salir =====
+  (function(){
+    let armado=false, saliendo=false;
+    const enCurso=()=>step>=1 && step<S.length-1;
+    function armar(){ if(armado||saliendo||!$("salir").hidden) return; armado=true; try{history.pushState({consulta:1},"");}catch(e){} }
+    // Chrome solo permite esto después de que la persona toca la pantalla
+    document.addEventListener("pointerdown",armar,true);
+    document.addEventListener("keydown",armar,true);
+    addEventListener("popstate",()=>{
+      if(saliendo) return;
+      armado=false;
+      $("salirP").textContent = enCurso()
+        ? "Tiene una consulta sin enviar. Si sale ahora, se puede perder."
+        : "Puede volver a entrar cuando quiera.";
+      $("salir").hidden=false; $("salirNo").focus();
+    });
+    $("salirNo").addEventListener("click",()=>{ $("salir").hidden=true; armar(); });
+    $("salirSi").addEventListener("click",()=>{
+      saliendo=true; $("salir").hidden=true;
+      history.back();
+      // Si no hay página anterior, se queda aquí: avisamos que puede cerrar
+      setTimeout(()=>{ try{window.close();}catch(e){}
+        $("salirT").textContent="Puede cerrar esta pestaña";
+        $("salirP").textContent="Para salir, cierre la pestaña o la aplicación. Si quiere seguir, toque Volver.";
+        $("salirSi").hidden=true; $("salirNo").textContent="Volver"; $("salir").hidden=false;
+        $("salirNo").onclick=()=>{ saliendo=false; $("salirSi").hidden=false; $("salirNo").textContent="Quedarme"; $("salirT").textContent="¿Desea salir de la aplicación?"; };
+      },600);
+    });
+    // Si cierra la pestaña o recarga con una consulta a medias, el navegador pregunta
+    addEventListener("beforeunload",e=>{ if(enCurso() && !saliendo){ try{saveState();}catch(_){} e.preventDefault(); e.returnValue=""; } });
+  })();
 })();
+
 </script>
 
 </body>
