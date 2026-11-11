@@ -170,7 +170,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     <div class="kpi"><span class="k">Consultas</span><span class="v" id="kTot">0</span><span class="s" id="kTotS"></span></div>
     <div class="kpi"><span class="k" id="kLeadK">Va primero</span><span class="v" id="kLead" style="font-size:20px">—</span><span class="s" id="kLeadS"></span></div>
     <div class="kpi"><span class="k">Ninguno</span><span class="v" id="kNin">0%</span><span class="s">de las preferencias</span></div>
-    <div class="kpi"><span class="k">Desean inscribirse</span><span class="v" id="kIns">0</span><span class="s" id="kInsS"></span></div>
+    <div class="kpi"><span class="k">Nuevos inscritos</span><span class="v" id="kIns">0</span><span class="s" id="kInsS"></span></div>
     <div class="kpi"><span class="k">Confirmados</span><span class="v" id="kConf">0</span><span class="s" id="kConfS"></span></div>
     <div class="kpi"><span class="k">Hoy</span><span class="v" id="kHoy">0</span><span class="s">consultas enviadas</span></div>
   </section>
@@ -219,18 +219,18 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
         <p class="note" id="repMeta"></p>
       </div>
       <div class="priv">
-        <div><h2 class="noprint">Reporte de inscripciones</h2><p><b>Desean inscribirse:</b> personas que no eran miembros y dijeron que sí. <b>Confirmados:</b> el encuestador marcó que la página oficial del partido mostró la inscripción. Solo totales, sin nombres ni cédulas, y sin el voto.</p></div>
+        <div><h2 class="noprint">Reporte de inscripciones</h2><p><b>Nuevos inscritos:</b> personas que no eran miembros y dijeron que sí desean inscribirse. <b>Confirmados:</b> el encuestador marcó que la página oficial del partido mostró la inscripción. Solo totales, sin nombres ni cédulas, y sin el voto.</p></div>
         <button type="button" class="pri noprint" id="print">Imprimir / Guardar en PDF</button>
       </div>
       <p class="note noprint">Usa los mismos filtros de arriba (por ejemplo, una provincia o un encuestador). En la ventana de imprimir, elige <b>Guardar como PDF</b>.</p>
       <h3 style="margin:4px 0 0;font-size:14px">Por sector</h3>
       <div class="tw"><table class="rep">
-        <thead><tr><th>Provincia</th><th>Sector</th><th class="num">Desean inscribirse</th><th class="num">Confirmados</th><th class="num">% confirmados</th></tr></thead>
+        <thead><tr><th>Provincia</th><th>Sector</th><th class="num">Nuevos inscritos</th><th class="num">Confirmados</th><th class="num">% confirmados</th></tr></thead>
         <tbody id="rSect"></tbody><tfoot id="rSectT"></tfoot>
       </table></div>
       <h3 style="margin:8px 0 0;font-size:14px">Por encuestador</h3>
       <div class="tw"><table class="rep">
-        <thead><tr><th>Encuestador</th><th class="num">Desean inscribirse</th><th class="num">Confirmados</th><th class="num">% confirmados</th></tr></thead>
+        <thead><tr><th>Encuestador</th><th class="num">Nuevos inscritos</th><th class="num">Confirmados</th><th class="num">% confirmados</th></tr></thead>
         <tbody id="rEnc"></tbody><tfoot id="rEncT"></tfoot>
       </table></div>
       <p class="rephead note" id="repDemo"></p>
@@ -417,7 +417,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     const ins=rows.filter(r=>r.inscribir).length, noMiem=rows.filter(r=>r.miembro==="No").length;
     $("kIns").textContent=nf.format(ins); $("kInsS").textContent=noMiem?`${pf(ins/noMiem)} de los no inscritos`:"";
     const conf=rows.filter(r=>r.confirmado).length;
-    $("kConf").textContent=nf.format(conf); $("kConfS").textContent=ins?`${pf(conf/ins)} de los que desean inscribirse`:"";
+    $("kConf").textContent=nf.format(conf); $("kConfS").textContent=ins?`${pf(conf/ins)} de los nuevos inscritos`:"";
     $("kHoy").textContent=nf.format(rows.filter(r=>r.fecha.toDateString()===today.toDateString()).length);
 
     // días
