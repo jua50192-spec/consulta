@@ -74,6 +74,9 @@ input[type=text],input[type=password],input[type=tel],select{font:inherit;paddin
   .phone{max-width:none;border:0;border-radius:0;box-shadow:none;min-height:100vh;min-height:100dvh}
   .top{padding-top:calc(14px + env(safe-area-inset-top,0px))}.nav{padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}}
 .err{color:var(--bad);font-size:13px;font-weight:600}
+.lo{border:1px solid rgba(255,255,255,.45);background:transparent;color:inherit;font-size:12px;padding:4px 9px;border-radius:8px;margin-left:8px}
+.recordar{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.35}
+.recordar input{width:20px;height:20px;margin-top:1px;flex:none}
 .tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:12px;padding:4px;gap:4px}
 .tabs button{border:0;background:transparent;padding:9px;border-radius:9px;font-weight:600;color:var(--muted)}
 .tabs button[aria-selected="true"]{background:var(--phone);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -106,7 +109,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <div class="page">
   <p class="demo"><b>Vista previa.</b> Así verá el encuestador la app en su celular. Toca los botones para recorrerla. No guarda ningún dato.</p>
   <form class="phone" id="app" novalidate>
-    <div class="top"><b>Consulta PRM</b><span id="who">Sin sesión</span></div>
+    <div class="top"><b>Consulta PRM</b><span><span id="who">Sin sesión</span><button type="button" class="lo" id="logout" hidden>Cerrar sesión</button></span></div>
     <div class="prog"><i id="bar" style="width:0%"></i></div>
     <div class="body" id="screen"></div>
     <div class="nav"><button type="button" id="back">Atrás</button><button type="button" class="pri" id="next">Entrar</button></div>
@@ -150,6 +153,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
       <p class="small">No use PIN fáciles como 123456, 000000 o su fecha de nacimiento. Nadie más debe conocer su PIN, ni el administrador.</p>`
       :`<div class="q"><label for="p">PIN de 6 dígitos</label><input type="password" id="p" inputmode="numeric" maxlength="6"></div>
       <p class="small">¿Primera vez? Toque <b>Activar mi cuenta</b> y use el código que le dio el administrador.</p>`}
+      <label class="recordar"><input type="checkbox" id="rec" checked><span><b>Recordar este celular por 30 días.</b> Así no tiene que escribir el PIN cada vez. Desmárquelo si el celular no es suyo.</span></label>
       <p class="err" id="e" hidden></p>
       <div class="hint"><b>Para probar esta vista previa:</b><br>Activar: cédula <b>001-1234567-8</b>, código <b>482915</b> (Juan Pérez).<br>Entrar ya activa: cédula <b>402-1234567-1</b>, PIN <b>731904</b> (María Santos).</div>`;},
       after:()=>{const c=$("u");c.addEventListener("input",()=>{const d=c.value.replace(/\D/g,"").slice(0,11);c.value=d.length>10?`${d.slice(0,3)}-${d.slice(3,10)}-${d.slice(10)}`:d.length>3?`${d.slice(0,3)}-${d.slice(3)}`:d;});
@@ -172,7 +176,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
           if(!r.pin)return err("Su cuenta todavía no está activa. Toque Activar mi cuenta.");
           if(pin!==r.pin)return err("PIN incorrecto.");
         }
-        st.u=r.nombre;st.mode="entrar";$("who").textContent=st.u+" · "+hechas+" hoy";return true;}},
+        st.u=r.nombre;st.ced=d;st.mode="entrar";$("who").textContent=st.u+" · "+hechas+" hoy";
+        if($("rec").checked) recordar(d,r.nombre); else olvidar();
+        return true;}},
     {t:"Consentimiento",btn:"Continuar",html:()=>`
       <div class="step">Paso 1 de 4</div><h2>Lea a la persona</h2>
       <p class="read">“Buenos días/tardes. Estamos haciendo una consulta interna del PRM sobre preferencias presidenciales. Es voluntaria y sus respuestas se usarán solo para fines estadísticos. ¿Acepta participar y que se tome una foto de su cédula para confirmar la entrevista?”</p>
@@ -279,12 +285,27 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
     if(!x||Date.now()-x.t>HORAS*3600e3){localStorage.removeItem(KEY);return false;}
     Object.entries(x.pins||{}).forEach(([k,p])=>{if(REG[k]){REG[k].pin=p;REG[k].codigo=null;}});
     if(!x.st||!x.st.u)return false;
+    // Si el celular no está recordado, solo se recupera una consulta a medias (por ejemplo, al abrir la cámara)
+    if(!recordado() && (!x.step||x.step<=1||x.step===S.length-1)){localStorage.removeItem(KEY);return false;}
     step=x.step||1;st=x.st;order=x.order||order;hechas=x.hechas||0;$("who").textContent=st.u+" · "+hechas+" hoy";return true;}catch(e){return false;}}
+  // ===== Recordar este celular =====
+  // Versión de prueba: se guarda en el celular. En la versión real, Supabase guarda una sesión segura
+  // y el servidor revisa en cada envío que la cuenta no esté bloqueada.
+  const REC="consultaPRM_recordar", DIAS=30;
+  function recordar(ced,nombre){try{localStorage.setItem(REC,JSON.stringify({ced,nombre,hasta:Date.now()+DIAS*864e5}));}catch(e){}}
+  function olvidar(){try{localStorage.removeItem(REC);}catch(e){}}
+  function recordado(){try{const x=JSON.parse(localStorage.getItem(REC)||"null");
+    if(!x||Date.now()>x.hasta){olvidar();return null;}
+    const r=REG[x.ced]; if(!r||r.estado==="Bloqueado"||!r.pin){olvidar();return null;}
+    return x;}catch(e){return null;}}
+  function cerrarSesion(){olvidar();try{localStorage.removeItem(KEY);}catch(e){}
+    step=0;st={};order=shuffle(CANDS);$("who").textContent="Sin sesión";show();}
   function show(){
     const s=S[step]; $("screen").innerHTML=s.html(); if(s.after)s.after();
     $("next").textContent=typeof s.btn==="function"?s.btn():s.btn; $("back").hidden=(step<=1||step===S.length-1);
     $("bar").style.width=(step===0?0:Math.min(step/4,1)*100)+"%";
     $("screen").scrollTop=0; const first=$("screen").querySelector("input,select"); if(first&&step>0&&step!==4)first.focus({preventScroll:true});
+    $("logout").hidden=!(step===1||step===S.length-1);
     if(step>0)saveState();
   }
   $("next").addEventListener("click",()=>{
@@ -294,8 +315,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   });
   $("back").addEventListener("click",()=>{if(step>1){step--;show();}});
   $("app").addEventListener("submit",e=>e.preventDefault());
-  const volvio=loadState();
+  $("logout").addEventListener("click",cerrarSesion);
+  let volvio=loadState(), auto=false;
+  if(!volvio){const x=recordado(); if(x){st={u:x.nombre,ced:x.ced,mode:"entrar"};step=1;auto=true;$("who").textContent=st.u+" · "+hechas+" hoy";}}
   show();
+  if(auto){const n=document.createElement("p");n.className="hint";n.textContent=`Bienvenido de nuevo, ${st.u}. Este celular está recordado. Si no es usted, toque “Cerrar sesión” arriba.`;$("screen").prepend(n);}
   if(volvio&&step===4){const n=document.createElement("p");n.className="hint";n.textContent="Se recuperó la consulta en curso. Si la foto no aparece, tómela otra vez o use “Elegir de la galería”.";$("screen").prepend(n);}
   // ===== Botón "atrás" del celular: preguntar antes de salir =====
   (function(){
