@@ -8,7 +8,7 @@
 <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0}body{-webkit-text-size-adjust:100%}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
-<title>Formulario Consulta PRM</title>
+<title>Control Verificate PRM</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Public+Sans:wght@400;500;600&display=swap">
 <style>
@@ -105,11 +105,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .done .ck svg{width:38px;height:38px}
 .counter{font-family:var(--display);font-size:34px;font-weight:800}
 </style>
-
 <div class="page">
-  <p class="demo"><b>Vista previa.</b> Así verá el encuestador la app en su celular. Toca los botones para recorrerla. No guarda ningún dato.</p>
+  <p class="demo"><b>Versión de prueba.</b> Así verá el encuestador la app en su celular. Los datos no se envían a ningún lado todavía.</p>
   <form class="phone" id="app" novalidate>
-    <div class="top"><b>Consulta PRM</b><span><span id="who">Sin sesión</span><button type="button" class="lo" id="logout" hidden>Cerrar sesión</button></span></div>
+    <div class="top"><b>Control Verificate</b><span><span id="who">Sin sesión</span><button type="button" class="lo" id="logout" hidden>Cerrar sesión</button></span></div>
     <div class="prog"><i id="bar" style="width:0%"></i></div>
     <div class="body" id="screen"></div>
     <div class="nav"><button type="button" id="back">Atrás</button><button type="button" class="pri" id="next">Entrar</button></div>
@@ -119,28 +118,40 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <div class="salir" id="salir" hidden role="dialog" aria-modal="true" aria-labelledby="salirT">
   <div class="box">
     <h3 id="salirT">¿Desea salir de la aplicación?</h3>
-    <p id="salirP">Si sale ahora, la consulta que no ha enviado se puede perder.</p>
+    <p id="salirP">Si sale ahora, el registro que no ha enviado se puede perder.</p>
     <div class="acc"><button type="button" class="pri" id="salirNo">Quedarme</button><button type="button" id="salirSi">Salir</button></div>
   </div>
 </div>
 <script>
 (() => {
-  const CANDS=["Carolina Mejía","David Collado","Raquel Peña","Wellington Arnaud","Guido Gómez Mazara"];
-  const GES=["Excelente","Buena","Regular","Mala","No conoce su gestión"];
-  // Las 31 provincias y el Distrito Nacional.
   const PROVS=["Azua","Bahoruco","Barahona","Dajabón","Distrito Nacional","Duarte","El Seibo","Elías Piña","Espaillat","Hato Mayor","Hermanas Mirabal","Independencia","La Altagracia","La Romana","La Vega","María Trinidad Sánchez","Monseñor Nouel","Monte Cristi","Monte Plata","Pedernales","Peravia","Puerto Plata","Samaná","San Cristóbal","San José de Ocoa","San Juan","San Pedro de Macorís","Sánchez Ramírez","Santiago","Santiago Rodríguez","Santo Domingo","Valverde"];
   // Sectores que cargó el administrador (en la versión real vienen de la base de datos; aquí son de ejemplo).
   const SECTORES={"Distrito Nacional":["Gualey","Capotillo","Cristo Rey","Villa Juana","Los Guandules"],"Santo Domingo":["Los Mina","Villa Mella","Los Alcarrizos","Sabana Perdida","Invivienda"],"Santiago":["Cienfuegos","Pekín","Los Salados","Gurabo"],"La Vega":["Villa Rosa","Palmarito","Las Carolinas"],"San Cristóbal":["Madre Vieja","Canastica","Lavapiés"],"Puerto Plata":["Padre Granero","Los Domínguez","San Marcos"],"La Altagracia":["Juan Pablo Duarte","Villa Cerro","Friusa"],"Duarte":["Los Rieles","Vista al Valle","Pueblo Nuevo"]};
-  const sectOpts=(pv,cur)=>{const l=SECTORES[pv]||[];return l.length?`<option value="">Elija el sector</option>`+l.map(x=>`<option ${cur===x?"selected":""}>${esc(x)}</option>`).join(""):`<option value="">No hay sectores cargados</option>`;};
-  const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
-  let step=0, st={}, order=shuffle(CANDS), hechas=0;
+  const RES=[
+    {v:"Ya era miembro",i:"✅",d:"Verificate dice: “Ya formas parte del padrón verificado del PRM”."},
+    {v:"Ratificado",i:"🔄",d:"Estaba a confirmar (Verificate NO le preguntó si desea formar parte) e hizo completa la prueba de vida."},
+    {v:"Nuevo inscrito",i:"🆕",d:"Verificate le preguntó si desea formar parte del PRM, dijo que sí e hizo completa la prueba de vida."},
+    {v:"No se pudo completar",i:"⚠️",d:"Empezó pero no terminó: la página no cargó, falló la prueba de vida u otro motivo."}];
+  let step=0, st={}, hechas=0;
   const REG={"00112345678":{nombre:"Juan Pérez",codigo:"482915",pin:null,estado:"Pendiente"},
              "40212345671":{nombre:"María Santos",codigo:null,pin:"731904",estado:"Activo"}};
+  // Cédulas ya registradas por otros encuestadores (ejemplo). En la versión real lo revisa la base de datos.
+  const YA={"00100000025":{por:"Carmen Rosario",fecha:"20 nov"}};
   const weak=p=>/^(\d)\1{5}$/.test(p)||"0123456789".includes(p)||"9876543210".includes(p)||["123123","112233","121212"].includes(p);
   const $=id=>document.getElementById(id);
   const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  const radios=(name,opts,row)=>`<div class="opts${row==="two"?" two":row?" row":""}">${opts.map((o,i)=>`<label class="opt"><input type="radio" name="${name}" value="${esc(o)}" id="${name}-${i}" ${st[name]===o?"checked":""}>${esc(o)}</label>`).join("")}</div>`;
-  const val=n=>{const e=document.querySelector(`input[name="${n}"]:checked`);return e?e.value:null;};
+  const fmtCed=d=>d.length>10?`${d.slice(0,3)}-${d.slice(3,10)}-${d.slice(10)}`:d.length>3?`${d.slice(0,3)}-${d.slice(3)}`:d;
+  const fmtTel=d=>d.length>6?`${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}`:d.length>3?`${d.slice(0,3)}-${d.slice(3)}`:d;
+  // Dígito verificador de la cédula dominicana (detecta errores al escribir)
+  const cedOk=d=>{if(!/^\d{11}$/.test(d))return false;let s=0;for(let i=0;i<10;i++){let n=+d[i]*(i%2?2:1);s+=n>9?n-9:n;}return (10-s%10)%10===+d[10];};
+  const sectOpts=(pv,cur)=>{const l=SECTORES[pv]||[];return l.length?`<option value="">Elija el sector</option>`+l.map(x=>`<option ${cur===x?"selected":""}>${esc(x)}</option>`).join(""):`<option value="">No hay sectores cargados</option>`;};
+  const mask=(el,f,max)=>el.addEventListener("input",()=>{el.value=f(el.value.replace(/\D/g,"").slice(0,max));});
+  // Registros de hoy en este celular (solo para que el encuestador vea su avance; en la versión real vienen del servidor)
+  const HOY="consultaPRM_hoy";
+  const hoyKey=()=>new Date().toDateString();
+  function misHoy(){try{const x=JSON.parse(localStorage.getItem(HOY)||"null");return x&&x.dia===hoyKey()&&x.enc===st.ced?x.lista:[];}catch(e){return [];}}
+  function guardarHoy(l){try{localStorage.setItem(HOY,JSON.stringify({dia:hoyKey(),enc:st.ced,lista:l}));}catch(e){}}
+  const who=()=>{hechas=misHoy().length;$("who").textContent=st.u+" · "+hechas+" verificados hoy";};
 
   const S=[
     {t:"Inicio de sesión",btn:()=>st.mode==="activar"?"Activar cuenta":"Entrar",html:()=>{const act=st.mode==="activar";return `
@@ -176,118 +187,75 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
           if(!r.pin)return err("Su cuenta todavía no está activa. Toque Activar mi cuenta.");
           if(pin!==r.pin)return err("PIN incorrecto.");
         }
-        st.u=r.nombre;st.ced=d;st.mode="entrar";$("who").textContent=st.u+" · "+hechas+" hoy";
+        st.u=r.nombre;st.ced=d;st.mode="entrar";
         if($("rec").checked) recordar(d,r.nombre); else olvidar();
         return true;}},
     {t:"Consentimiento",btn:"Continuar",html:()=>`
-      <div class="step">Paso 1 de 4</div><h2>Lea a la persona</h2>
-      <p class="read">“Buenos días/tardes. Estamos haciendo una consulta interna del PRM sobre preferencias presidenciales. Es voluntaria y sus respuestas se usarán solo para fines estadísticos. ¿Acepta participar y que se tome una foto de su cédula para confirmar la entrevista?”</p>
-      <label class="opt"><input type="checkbox" id="acepta" ${st.acepta?"checked":""}>Acepta participar</label>
-      <label class="opt"><input type="checkbox" id="foto" ${st.foto?"checked":""}>Acepta foto de la cédula</label>
-      <p class="err" id="e" hidden>Sin consentimiento no se puede hacer la consulta.</p>`,
-      save:()=>{st.acepta=$("acepta").checked;st.foto=$("foto").checked;if(!st.acepta){$("e").hidden=false;return false;}return true;}},
-    {t:"Datos",btn:"Siguiente",html:()=>`
-      <div class="step">Paso 2 de 4</div><h2>Datos de la persona</h2>
-      <div class="gps">Ubicación y hora registradas</div>
+      <div class="step">Antes de empezar</div><h2>Lea esto a la persona</h2>
+      <p class="read">“Vamos a anotar su nombre, cédula y teléfono para el control interno del partido. ¿Está de acuerdo?”</p>
+      <label class="opt"><input type="checkbox" id="acepta" ${st.acepta?"checked":""}>La persona acepta</label>
+      <p class="small">Recuerde: sin el número de cédula no se puede hacer ningún proceso. Si la persona no lo tiene, no se registra.</p>
+      <p class="err" id="e" hidden>Si la persona no acepta, no se pueden anotar sus datos. Agradézcale y siga con la próxima.</p>`,
+      save:()=>{st.acepta=$("acepta").checked;if(!st.acepta){$("e").hidden=false;return false;}st.aceptaHora=new Date().toISOString();return true;}},
+    {t:"Datos de la persona",btn:"Continuar",html:()=>`
+      <div class="step">Paso 1 de 3</div><h2>Datos de la persona</h2>
+      <div class="q"><label for="nom">Nombre y apellido</label><input type="text" id="nom" autocomplete="off" value="${esc(st.nom||"")}"></div>
+      <div class="q"><label for="ced">Cédula</label><input type="tel" id="ced" inputmode="numeric" placeholder="000-0000000-0" autocomplete="off" value="${esc(st.cedP||"")}"></div>
+      <div class="q"><label for="tel">Teléfono</label><input type="tel" id="tel" inputmode="numeric" placeholder="809-000-0000" autocomplete="off" value="${esc(st.tel||"")}"></div>
+      <p class="err" id="e" hidden></p>
+      <div class="hint"><b>Para probar:</b> cédula válida <b>001-0000001-7</b>. Cédula ya registrada por otro encuestador: <b>001-0000002-5</b>.</div>`,
+      after:()=>{mask($("ced"),fmtCed,11);mask($("tel"),fmtTel,10);},
+      save:()=>{const err=m=>{$("e").textContent=m;$("e").hidden=false;return false;};
+        const nom=$("nom").value.replace(/\s+/g," ").trim(), d=$("ced").value.replace(/\D/g,""), t=$("tel").value.replace(/\D/g,"");
+        st.nom=nom;st.cedP=$("ced").value;st.tel=$("tel").value;
+        if(nom.split(" ").length<2||nom.length<5)return err("Escriba el nombre y por lo menos un apellido.");
+        if(d.length!==11)return err("La cédula debe tener 11 números.");
+        if(!cedOk(d))return err("Esa cédula no es válida. Revise que los números estén bien escritos.");
+        if(YA[d])return err(`Esta cédula ya fue registrada por ${YA[d].por} el ${YA[d].fecha}. No se puede registrar dos veces.`);
+        if(misHoy().some(x=>x.ced===d))return err("Usted ya registró esta cédula hoy.");
+        if(!/^(809|829|849)\d{7}$/.test(t))return err("Escriba un teléfono de 10 números que empiece con 809, 829 u 849.");
+        st.cedD=d;return true;}},
+    {t:"Ubicación",btn:"Continuar",html:()=>`
+      <div class="step">Paso 2 de 3</div><h2>¿Dónde vive la persona?</h2>
       <div class="q"><label for="prov">Provincia</label><select id="prov"><option value="">Elija la provincia</option>${PROVS.map(p=>`<option ${st.prov===p?"selected":""}>${p}</option>`).join("")}</select></div>
       <div class="q"><label for="sect">Sector o barrio</label><select id="sect">${st.prov?sectOpts(st.prov,st.sect):`<option value="">Primero elija la provincia</option>`}</select>
         <p class="small" id="sinSect" ${st.prov&&!(SECTORES[st.prov]||[]).length?"":"hidden"}>Esta provincia todavía no tiene sectores. Pida al administrador que los agregue.</p></div>
-      <div class="q"><label for="calle">Calle</label><input type="text" id="calle" placeholder="Ej.: Calle Principal" value="${esc(st.calle||"")}"></div>
-      <div class="q"><span class="ql">Sexo</span>${radios("sexo",["Femenino","Masculino"],true)}</div>
-      <div class="q"><span class="ql">Edad</span>${radios("edad",["18–35","36–45","46–59","60 o más"],"two")}</div>
-      <div class="q"><span class="ql">¿Es miembro o está inscrito en el PRM?</span>${radios("miembro",["Sí","No"],true)}</div>
-      <div class="q" id="insQ" ${st.miembro==="No"?"":"hidden"}><span class="ql">¿Desea inscribirse en el partido?</span>${radios("ins",["Sí","No"],true)}
-        <div id="insBox" ${st.ins==="Sí"?"":"hidden"} style="display:grid;gap:8px;margin-top:8px">
-          <a class="verif" id="insLink" href="https://verificate.prm.do/" target="_blank" rel="noopener" onclick="try{saveState()}catch(e){}"><img src="data:image/png;base64,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" alt="Logo de Verificate PRM"><div><b>Inscribirse en Verificate</b><span>Página oficial del PRM · verificate.prm.do · se abre en otra pestaña</span></div></a>
-          <label class="opt"><input type="checkbox" id="insConf" ${st.insConf?"checked":""}>Inscripción confirmada</label>
-          <p class="small">Marque esta casilla solo cuando la página oficial del partido muestre que la persona quedó inscrita. Si no terminó, déjela sin marcar.</p></div></div>
-      <p class="err" id="e" hidden>Complete provincia, sector, calle y todas las opciones.</p>`,
-      after:()=>{$("prov").addEventListener("change",()=>{const pv=$("prov").value;$("sect").innerHTML=pv?sectOpts(pv,""):`<option value="">Primero elija la provincia</option>`;$("sinSect").hidden=!pv||(SECTORES[pv]||[]).length>0;});
-        document.querySelectorAll('input[name=miembro]').forEach(r=>r.addEventListener("change",()=>{$("insQ").hidden=val("miembro")!=="No";}));
-        document.querySelectorAll('input[name=ins]').forEach(r=>r.addEventListener("change",()=>{$("insBox").hidden=val("ins")!=="Sí";}));},
-      save:()=>{Object.assign(st,{prov:$("prov").value,sect:$("sect").value,calle:$("calle").value.trim(),sexo:val("sexo"),edad:val("edad"),miembro:val("miembro"),ins:val("ins"),insConf:val("miembro")==="No"&&val("ins")==="Sí"&&$("insConf").checked});
-        const ok=st.prov&&st.sect&&st.calle&&st.sexo&&st.edad&&st.miembro&&(st.miembro==="Sí"||st.ins);if(!ok)$("e").hidden=false;return !!ok;}},
-    {t:"Preferencia",btn:"Siguiente",html:()=>`
-      <div class="step">Paso 3 de 4</div><h2>¿Cuál de estos aspirantes prefiere como candidato presidencial del PRM?</h2>
-      ${radios("pref",[...order,"Ninguno"])}
-      <p class="err" id="e" hidden>Elija una opción.</p>`,
-      save:()=>{st.pref=val("pref");if(!st.pref)$("e").hidden=false;return !!st.pref;}},
-    {t:"Cédula",btn:"Enviar consulta",html:()=>`
-      <div class="step">Paso 4 de 4</div><h2>Cédula</h2>
-      <div class="q"><label for="nom">Nombre y apellido (como aparece en la cédula)</label><input type="text" id="nom" placeholder="Ej.: María Rodríguez Pérez" value="${esc(st.nom||"")}" autocomplete="off"></div>
-      <div class="q"><label for="ced">Número de cédula de la persona consultada</label><input type="tel" id="ced" placeholder="000-0000000-0" value="${esc(st.ced||"")}" inputmode="numeric"></div>
-      <p class="small">La app guarda solo un código del número para evitar que la misma persona participe dos veces.</p>
-      ${st.foto?[["F","Frente de la cédula"],["B","Parte trasera de la cédula"]].map(([k,t])=>`<div class="q"><span class="ql">${t}</span>
-        <div class="photo" id="ph${k}">${st["img"+k]?`<img src="${st["img"+k]}" alt="${t}">`:"Todavía no hay foto"}</div>
-        <p class="size" id="sz${k}" ${st["img"+k]?"":"hidden"}>${esc(st["sz"+k]||"")}</p>
-        <div class="photo-btns"><button type="button" class="cam" id="bCam${k}">${st["img"+k]?"Repetir foto":"Tomar foto"}</button><button type="button" id="bGal${k}">Elegir de la galería</button></div>
-        <input type="file" id="fileCam${k}" class="vh" accept="image/*" capture="environment" tabindex="-1" aria-hidden="true"><input type="file" id="fileGal${k}" class="vh" accept="image/*" tabindex="-1" aria-hidden="true"></div>`).join("")+`<p class="small">"Tomar foto" abre la cámara dentro de la app, sin salir de la consulta. Si el teléfono no lo permite, abre la cámara del teléfono o la carpeta de archivos.</p><p class="err" id="eF" hidden>Falta la foto del frente o de la parte trasera.</p>`:`<p class="small">La persona no aceptó la foto. Se envía sin foto.</p>`}
-      <p class="err" id="e" hidden>Escriba el nombre y apellido, y los 11 dígitos de la cédula.</p>`,
-      after:()=>{const ced=$("ced");ced.addEventListener("input",()=>{const d=ced.value.replace(/\D/g,"").slice(0,11);ced.value=d.length>10?`${d.slice(0,3)}-${d.slice(3,10)}-${d.slice(10)}`:d.length>3?`${d.slice(0,3)}-${d.slice(3)}`:d;});
-        ["F","B"].forEach(k=>{const fc=$("fileCam"+k),fg=$("fileGal"+k);if(!fc)return;
-        const keep=()=>{st.ced=$("ced").value;st.nom=$("nom").value.trim();saveState();};
-        $("bCam"+k).addEventListener("click",()=>{keep();openCam(k,()=>fc.click());});$("bGal"+k).addEventListener("click",()=>{keep();fg.click();});
-        const take=(inp)=>{const file=inp.files[0];if(!file)return;$("ph"+k).textContent="Procesando foto…";
-          let url=URL.createObjectURL(file),retried=false;const im=new Image();
-          im.onload=()=>{try{const max=1200,escala=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement("canvas");c.width=Math.round(im.width*escala);c.height=Math.round(im.height*escala);
-            c.getContext("2d").drawImage(im,0,0,c.width,c.height);if(url.startsWith("blob:"))URL.revokeObjectURL(url);
-            fin(k,c,file.size);inp.value="";
-            }catch(err){$("ph"+k).textContent="No se pudo procesar la foto. Tómela otra vez.";}};
-          im.onerror=()=>{if(!retried){retried=true;const r=new FileReader();r.onload=()=>{url=r.result;im.src=url;};r.onerror=()=>{$("ph"+k).textContent="No se pudo abrir esa imagen. Pruebe con otra foto.";};r.readAsDataURL(file);}
-            else $("ph"+k).textContent="No se pudo abrir esa imagen. Pruebe con otra foto.";};im.src=url;};
-        fc.addEventListener("change",()=>take(fc));fg.addEventListener("change",()=>take(fg));});},
-      save:()=>{st.ced=$("ced").value;st.nom=$("nom").value.trim();const ok=st.ced.replace(/\D/g,"").length===11&&st.nom.split(/\s+/).length>=2;if(!ok)$("e").hidden=false;
-        const fotos=!st.foto||(st.imgF&&st.imgB);if(!fotos)$("eF").hidden=false;return ok&&!!fotos;}},
-    {t:"Enviada",btn:"Nueva consulta",html:()=>`
-      <div class="done"><div class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--ok)"><path d="M5 12.5l4.5 4.5L19 7.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <h2>Consulta guardada</h2><p>Gracias por participar.</p>
-      <div class="step">Consultas enviadas hoy</div><div class="counter">${hechas}</div>
-      <p class="small">En la app real, si no hay internet, la consulta se guarda en el celular y se envía sola al volver la señal.</p></div>`,
-      save:()=>{st={u:st.u,uc:st.uc,mode:"entrar"};order=shuffle(CANDS);return true;}}
+      <div class="q"><label for="calle">Calle</label><input type="text" id="calle" placeholder="Ej.: Calle 5, casa 12" value="${esc(st.calle||"")}"></div>
+      <p class="err" id="e" hidden></p>`,
+      after:()=>{$("prov").addEventListener("change",()=>{const pv=$("prov").value;$("sect").innerHTML=pv?sectOpts(pv,""):`<option value="">Primero elija la provincia</option>`;$("sinSect").hidden=!pv||(SECTORES[pv]||[]).length>0;});},
+      save:()=>{st.prov=$("prov").value;st.sect=$("sect").value;st.calle=$("calle").value.trim();
+        if(!st.prov||!st.sect||st.calle.length<2){$("e").textContent="Complete provincia, sector y calle.";$("e").hidden=false;return false;}return true;}},
+    {t:"Verificate",btn:"Revisar y enviar",html:()=>`
+      <div class="step">Paso 3 de 3</div><h2>Verificar en Verificate</h2>
+      <p class="small">Abra Verificate, escriba la cédula de <b>${esc(st.nom)}</b> (<b>${esc(st.cedP)}</b>) y marque lo que muestre la página.</p>
+      <a class="verif" href="https://verificate.prm.do/" target="_blank" rel="noopener" onclick="try{window.__guardar&&window.__guardar()}catch(e){}"><img src="data:image/png;base64,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" alt="Logo de Verificate PRM"><div><b>Abrir Verificate</b><span>Página oficial del PRM · se abre en otra pestaña</span></div></a>
+      <div class="ql">¿Qué mostró Verificate?</div>
+      <div class="opts">${RES.map((r,i)=>`<label class="opt" style="align-items:flex-start"><input type="radio" name="res" value="${r.v}" ${st.res===r.v?"checked":""} style="margin-top:2px"><span><b>${r.i} ${r.v}</b><br><span class="small">${r.d}</span></span></label>`).join("")}</div>
+      <div class="q" id="notaQ" ${st.res==="No se pudo completar"?"":"hidden"}><label for="nota">¿Qué pasó? (opcional)</label><input type="text" id="nota" maxlength="120" placeholder="Ej.: falló la prueba de vida" value="${esc(st.nota||"")}"></div>
+      <p class="err" id="e" hidden>Marque el resultado que mostró Verificate.</p>`,
+      after:()=>{document.querySelectorAll('input[name=res]').forEach(x=>x.addEventListener("change",()=>{$("notaQ").hidden=x.value!=="No se pudo completar"||!x.checked;}));},
+      save:()=>{const e=document.querySelector('input[name=res]:checked');if(!e){$("e").hidden=false;return false;}
+        st.res=e.value;st.nota=st.res==="No se pudo completar"?$("nota").value.trim():"";return true;}},
+    {t:"Revisar",btn:"Enviar registro",html:()=>{const r=RES.find(x=>x.v===st.res);return `
+      <div class="step">Revisar antes de enviar</div><h2>¿Está todo bien?</h2>
+      <div class="read" style="font-style:normal;display:grid;gap:4px">
+        <div><b>${esc(st.nom)}</b></div><div>Cédula: ${esc(st.cedP)}</div><div>Teléfono: ${esc(st.tel)}</div>
+        <div>${esc(st.sect)}, ${esc(st.prov)} · ${esc(st.calle)}</div>
+        <div style="margin-top:6px;font-weight:600">${r.i} ${esc(st.res)}${st.nota?` · ${esc(st.nota)}`:""}</div></div>
+      <p class="small">Si algo está mal, toque <b>Atrás</b> para corregirlo. Se guardará con su nombre (${esc(st.u)}), la fecha y la hora.</p>`;},
+      save:()=>{const l=misHoy();l.unshift({ced:st.cedD,nom:st.nom,res:st.res,acepto:st.aceptaHora,hora:new Date().toLocaleTimeString("es-DO",{hour:"numeric",minute:"2-digit"})});guardarHoy(l);return true;}},
+    {t:"Enviado",btn:"Registrar otra persona",html:()=>{const l=misHoy();return `
+      <div class="done"><div class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></div>
+      <h2>Registro enviado</h2><p class="small">Versión de prueba: todavía no llega al administrador. Cuando conectemos la base de datos, lo verá al instante.</p><div class="counter">${l.length}</div><p class="small">personas verificadas hoy por usted</p></div>
+      <div class="ql">Sus verificados de hoy</div>
+      <div style="display:grid;gap:6px">${l.slice(0,15).map(x=>`<div class="opt" style="cursor:default;justify-content:space-between"><span>${esc(x.nom)}</span><span class="small">${RES.find(r=>r.v===x.res).i} ${esc(x.hora)}</span></div>`).join("")}</div>`;},
+      save:()=>{st={u:st.u,ced:st.ced,mode:"entrar"};return true;}}
   ];
-
-  // Termina una foto: la comprime, la muestra y guarda el avance.
-  function fin(k,c,orig){let q=0.7,data=c.toDataURL("image/jpeg",q);while(data.length*0.75>120000&&q>0.3){q-=0.1;data=c.toDataURL("image/jpeg",q);}
-    const kb=Math.round(data.length*0.75/1024);
-    st["img"+k]=data;st["sz"+k]=`Foto lista: ${kb} KB`+(orig?` (original ${orig>1048576?(orig/1048576).toFixed(1)+" MB":Math.round(orig/1024)+" KB"})`:"");
-    const ph=$("ph"+k);if(ph){ph.replaceChildren();const out=new Image();out.src=data;out.alt="Foto de la cédula";ph.append(out);
-      $("sz"+k).textContent=st["sz"+k];$("sz"+k).hidden=false;$("bCam"+k).textContent="Repetir foto";}
-    const ef=$("eF");if(ef&&st.imgF&&st.imgB)ef.hidden=true;saveState();}
-  // Cámara dentro de la página: no se sale de la app, así el teléfono no la cierra.
-  let camFallo=false;
-  async function openCam(k,fallback){
-    const enMarco=(()=>{try{return window.self!==window.top;}catch(e){return true;}})();
-    if(enMarco||camFallo||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){fallback();return;}
-    let stream;
-    try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},audio:false});}
-    catch(e){camFallo=true;const ph=$("ph"+k);if(ph)ph.textContent="No se pudo abrir la cámara de la app. Toque “Tomar foto” otra vez para usar la cámara del teléfono, o use “Elegir de la galería”.";return;}
-    const ov=document.createElement("div");ov.className="cam-ov";ov.setAttribute("role","dialog");ov.setAttribute("aria-label","Cámara");
-    ov.innerHTML=`<div class="cam-t">${k==="F"?"Frente":"Parte trasera"} de la cédula</div><div class="cam-box"><video playsinline muted autoplay></video><div class="cam-guide"><span class="cam-dim">Cédula · 85.60 × 53.98 mm</span></div></div><p class="cam-h">Ponga la cédula dentro del recuadro, con buena luz, y toque Capturar.</p><div class="cam-b"><button type="button" class="cx">Cancelar</button><button type="button" class="pri cc">Capturar</button></div>`;
-    document.body.append(ov);const v=ov.querySelector("video");v.srcObject=stream;
-    const close=()=>{stream.getTracks().forEach(t=>t.stop());ov.remove();};
-    ov.querySelector(".cx").addEventListener("click",close);
-    // Al capturar, recorta solo lo que está dentro de la guía, con la proporción exacta de la cédula (85.60 × 53.98 mm).
-    ov.querySelector(".cc").addEventListener("click",()=>{if(!v.videoWidth)return;
-      const vr=v.getBoundingClientRect(),gr=ov.querySelector(".cam-guide").getBoundingClientRect();
-      const s2=Math.min(vr.width/v.videoWidth,vr.height/v.videoHeight);
-      const ox=vr.left+(vr.width-v.videoWidth*s2)/2, oy=vr.top+(vr.height-v.videoHeight*s2)/2;
-      let sx=(gr.left-ox)/s2, sy=(gr.top-oy)/s2, sw=gr.width/s2, sh=gr.height/s2;
-      sx=Math.max(0,sx); sy=Math.max(0,sy); sw=Math.min(sw,v.videoWidth-sx); sh=Math.min(sh,v.videoHeight-sy);
-      const c=document.createElement("canvas"); c.width=1000; c.height=Math.round(1000*53.98/85.6);
-      c.getContext("2d").drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);
-      close();fin(k,c,null);});
-  }
-  // Guarda el avance en el celular para que, si el teléfono recarga la página al abrir la cámara, se vuelva al mismo paso.
+  // Guarda el avance en el celular por si la página se recarga
   const KEY="consultaPRM_avance", HORAS=8;
-  function saveState(){try{localStorage.setItem(KEY,JSON.stringify({t:Date.now(),step,st,order,hechas,
+  function saveState(){try{localStorage.setItem(KEY,JSON.stringify({t:Date.now(),step,st,
     pins:Object.fromEntries(Object.entries(REG).filter(([,r])=>r.pin).map(([k,r])=>[k,r.pin]))}));}catch(e){}}
-  function loadState(){try{const x=JSON.parse(localStorage.getItem(KEY)||"null");
-    if(!x||Date.now()-x.t>HORAS*3600e3){localStorage.removeItem(KEY);return false;}
-    Object.entries(x.pins||{}).forEach(([k,p])=>{if(REG[k]){REG[k].pin=p;REG[k].codigo=null;}});
-    if(!x.st||!x.st.u)return false;
-    // Si el celular no está recordado, solo se recupera una consulta a medias (por ejemplo, al abrir la cámara)
-    if(!recordado() && (!x.step||x.step<=1||x.step===S.length-1)){localStorage.removeItem(KEY);return false;}
-    step=x.step||1;st=x.st;order=x.order||order;hechas=x.hechas||0;$("who").textContent=st.u+" · "+hechas+" hoy";return true;}catch(e){return false;}}
+  window.__guardar=saveState;
   // ===== Recordar este celular =====
   // Versión de prueba: se guarda en el celular. En la versión real, Supabase guarda una sesión segura
   // y el servidor revisa en cada envío que la cuenta no esté bloqueada.
@@ -299,28 +267,33 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
     const r=REG[x.ced]; if(!r||r.estado==="Bloqueado"||!r.pin){olvidar();return null;}
     return x;}catch(e){return null;}}
   function cerrarSesion(){olvidar();try{localStorage.removeItem(KEY);}catch(e){}
-    step=0;st={};order=shuffle(CANDS);$("who").textContent="Sin sesión";show();}
+    step=0;st={};$("who").textContent="Sin sesión";show();}
+  function loadState(){try{const x=JSON.parse(localStorage.getItem(KEY)||"null");
+    if(!x||Date.now()-x.t>HORAS*3600e3){localStorage.removeItem(KEY);return false;}
+    Object.entries(x.pins||{}).forEach(([k,p])=>{if(REG[k]){REG[k].pin=p;REG[k].codigo=null;}});
+    if(!x.st||!x.st.u)return false;
+    if(!recordado() && (!x.step||x.step<=1||x.step===S.length-1)){localStorage.removeItem(KEY);return false;}
+    step=x.step||1;st=x.st;who();return true;}catch(e){return false;}}
   function show(){
     const s=S[step]; $("screen").innerHTML=s.html(); if(s.after)s.after();
     $("next").textContent=typeof s.btn==="function"?s.btn():s.btn; $("back").hidden=(step<=1||step===S.length-1);
-    $("bar").style.width=(step===0?0:Math.min(step/4,1)*100)+"%";
-    $("screen").scrollTop=0; const first=$("screen").querySelector("input,select"); if(first&&step>0&&step!==4)first.focus({preventScroll:true});
+    $("bar").style.width=(step===0?0:Math.min(step/5,1)*100)+"%";
     $("logout").hidden=!(step===1||step===S.length-1);
+    $("screen").scrollTop=0;
     if(step>0)saveState();
   }
   $("next").addEventListener("click",()=>{
     if(!S[step].save())return;
-    if(step===4){hechas++;$("who").textContent=st.u+" · "+hechas+" hoy";}
-    step = step===S.length-1 ? 1 : step+1; show(); $("app").scrollIntoView({block:"start",behavior:"smooth"});
+    if(step===0)who();
+    step = step===S.length-1 ? 1 : step+1; if(step===S.length-1)who(); show(); $("app").scrollIntoView({block:"start",behavior:"smooth"});
   });
   $("back").addEventListener("click",()=>{if(step>1){step--;show();}});
   $("app").addEventListener("submit",e=>e.preventDefault());
   $("logout").addEventListener("click",cerrarSesion);
   let volvio=loadState(), auto=false;
-  if(!volvio){const x=recordado(); if(x){st={u:x.nombre,ced:x.ced,mode:"entrar"};step=1;auto=true;$("who").textContent=st.u+" · "+hechas+" hoy";}}
+  if(!volvio){const x=recordado(); if(x){st={u:x.nombre,ced:x.ced,mode:"entrar"};step=1;auto=true;who();}}
   show();
   if(auto){const n=document.createElement("p");n.className="hint";n.textContent=`Bienvenido de nuevo, ${st.u}. Este celular está recordado. Si no es usted, toque “Cerrar sesión” arriba.`;$("screen").prepend(n);}
-  if(volvio&&step===4){const n=document.createElement("p");n.className="hint";n.textContent="Se recuperó la consulta en curso. Si la foto no aparece, tómela otra vez o use “Elegir de la galería”.";$("screen").prepend(n);}
   // ===== Botón "atrás" del celular: preguntar antes de salir =====
   (function(){
     let armado=false, saliendo=false;
@@ -333,7 +306,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
       if(saliendo) return;
       armado=false;
       $("salirP").textContent = enCurso()
-        ? "Tiene una consulta sin enviar. Si sale ahora, se puede perder."
+        ? "Tiene un registro sin enviar. Si sale ahora, se puede perder."
         : "Puede volver a entrar cuando quiera.";
       $("salir").hidden=false; $("salirNo").focus();
     });
@@ -353,7 +326,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
     addEventListener("beforeunload",e=>{ if(enCurso() && !saliendo){ try{saveState();}catch(_){} e.preventDefault(); e.returnValue=""; } });
   })();
 })();
-
 </script>
 
 </body>
