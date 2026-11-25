@@ -173,7 +173,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
   <section class="kpis" aria-label="Cifras clave">
     <div class="kpi" style="border-color:var(--accent)"><span class="k">Verificados (total)</span><span class="v" id="kTot">0</span><span class="s" id="kTotS"></span></div>
     <div class="kpi"><span class="k">✅ Ya eran miembros</span><span class="v" id="k1">0</span><span class="s" id="k1s"></span></div>
-    <div class="kpi"><span class="k">🔄 Ratificados</span><span class="v" id="k2">0</span><span class="s" id="k2s"></span></div>
+    <div class="kpi"><span class="k">🔄 Confirmados</span><span class="v" id="k2">0</span><span class="s" id="k2s"></span></div>
     <div class="kpi"><span class="k">🆕 Nuevos inscritos</span><span class="v" id="k3">0</span><span class="s" id="k3s"></span></div>
     <div class="kpi"><span class="k">⚠️ No se pudo completar</span><span class="v" id="k4">0</span><span class="s" id="k4s"></span></div>
     <div class="kpi"><span class="k">Hoy</span><span class="v" id="kHoy">0</span><span class="s">verificados hoy</span></div>
@@ -193,7 +193,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     <div class="card wide">
       <div><h2>Por encuestador</h2><p class="note">Toque un encuestador para ver solo sus registros. Cada encuestador ve su total de verificados en su celular. Si alguien tiene muchos "No se pudo completar", conviene preguntarle qué está pasando.</p></div>
       <div class="tw"><table>
-        <thead><tr><th>Encuestador</th><th class="num">Verificados</th><th class="num">Ya miembros</th><th class="num">Ratificados</th><th class="num">Nuevos</th><th class="num">No completados</th><th>Último registro</th></tr></thead>
+        <thead><tr><th>Encuestador</th><th class="num">Verificados</th><th class="num">Ya miembros</th><th class="num">Confirmados</th><th class="num">Nuevos</th><th class="num">No completados</th><th>Último registro</th></tr></thead>
         <tbody id="tEnc"></tbody>
       </table></div>
     </div>
@@ -209,7 +209,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     </div>
     <div class="card wide">
       <div class="priv"><div><h2>Imprimir / Guardar en PDF</h2><p>Los dos reportes usan los filtros de arriba. En la ventana de imprimir, elija <b>Guardar como PDF</b>.</p></div></div>
-      <div class="btnrow"><button type="button" class="pri" id="pRes">Reporte de totales</button><button type="button" id="pList">Lista de personas</button></div>
+      <div class="btnrow"><button type="button" class="pri" id="pRes">Total</button><button type="button" id="pList">Lista de personas</button></div>
       <p class="note">⚠️ La <b>lista de personas</b> tiene nombres, cédulas y teléfonos. Entréguela solo a quien esté autorizado y nunca la suba a GitHub ni a grupos de WhatsApp.</p>
     </div>
     <div class="card wide" id="encCard">
@@ -232,7 +232,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
 <div id="printArea"></div>
 <script>
 (() => {
-  const RES=["Ya era miembro","Ratificado","Nuevo inscrito","No se pudo completar"], RI=["✅","🔄","🆕","⚠️"], RC=["p1","p4","p2","p3"];
+  const RES=["Ya era miembro","Confirmado","Nuevo inscrito","No se pudo completar"], RI=["✅","🔄","🆕","⚠️"], RC=["p1","p4","p2","p3"];
   const PROVS=["Distrito Nacional","Santo Domingo","Santiago","La Vega","San Cristóbal","Puerto Plata","La Altagracia","Duarte"]; // solo para los datos de ejemplo
   const TODAS=["Azua","Bahoruco","Barahona","Dajabón","Distrito Nacional","Duarte","El Seibo","Elías Piña","Espaillat","Hato Mayor","Hermanas Mirabal","Independencia","La Altagracia","La Romana","La Vega","María Trinidad Sánchez","Monseñor Nouel","Monte Cristi","Monte Plata","Pedernales","Peravia","Puerto Plata","Samaná","San Cristóbal","San José de Ocoa","San Juan","San Pedro de Macorís","Sánchez Ramírez","Santiago","Santiago Rodríguez","Santo Domingo","Valverde"];
   const SECT={"Distrito Nacional":["Gualey","Capotillo","Cristo Rey","Villa Juana","Los Guandules"],"Santo Domingo":["Los Mina","Villa Mella","Los Alcarrizos","Sabana Perdida","Invivienda"],"Santiago":["Cienfuegos","Pekín","Los Salados","Gurabo"],"La Vega":["Villa Rosa","Palmarito","Las Carolinas"],"San Cristóbal":["Madre Vieja","Canastica","Lavapiés"],"Puerto Plata":["Padre Granero","Los Domínguez","San Marcos"],"La Altagracia":["Juan Pablo Duarte","Villa Cerro","Friusa"],"Duarte":["Los Rieles","Vista al Valle","Pueblo Nuevo"]};
@@ -335,10 +335,10 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     const m=document.createElement("p");m.className="note";m.textContent=`Fecha: ${new Date().toLocaleString("es-DO",{dateStyle:"long",timeStyle:"short"})} · Preparado por: ${$("adminName").textContent.replace("Administrador: ","")} · Filtros: ${filtrosTxt()}`;
     const d=document.createElement("p");d.className="note";d.textContent="DATOS DE EJEMPLO: personas inventadas para mostrar el formato.";pa.append(h,m,d);return pa;}
   const h2=t=>{const e=document.createElement("h2");e.textContent=t;return e;};
-  $("pRes").addEventListener("click",()=>{const rows=filtered(),T=rows.length,c=cuenta(rows),pa=cabeza("Reporte de totales");
+  $("pRes").addEventListener("click",()=>{const rows=filtered(),T=rows.length,c=cuenta(rows),pa=cabeza("Total");
     pa.append(h2("1. Resumen"),tabla(["Resultado","Verificados","%"],[...RES.map((r,i)=>[RI[i]+" "+r,nf.format(c[i]),T?pf(c[i]/T):"—"]),["Total verificados",nf.format(T),T?"100%":"—"]],1));
     const enc=ENC.map(e=>{const l=rows.filter(r=>r.enc===e);return [e,l.length,...cuenta(l)];}).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]);
-    pa.append(h2("2. Por encuestador"),tabla(["Encuestador","Verificados","Ya miembros","Ratificados","Nuevos","No completados"],[...enc.map(x=>x.map((v,i)=>i?nf.format(v):v)),["Total",nf.format(T),...c.map(v=>nf.format(v))]],1));
+    pa.append(h2("2. Por encuestador"),tabla(["Encuestador","Verificados","Ya miembros","Confirmados","Nuevos","No completados"],[...enc.map(x=>x.map((v,i)=>i?nf.format(v):v)),["Total",nf.format(T),...c.map(v=>nf.format(v))]],1));
     window.print();});
   $("pList").addEventListener("click",()=>{const l=listaFiltrada(),pa=cabeza("Lista de personas");
     const n=document.createElement("p");n.className="note";n.textContent=`${nf.format(l.length)} personas. Documento confidencial: contiene datos personales.`;pa.append(n);
