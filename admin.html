@@ -8,7 +8,7 @@
 <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0}body{-webkit-text-size-adjust:100%}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
-<title>Tablero Consulta PRM</title>
+<title>Panel Control Verificate</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
@@ -110,99 +110,110 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
 .repday th,.repday td{font-size:12px;padding:6px 6px}
 .repday th{white-space:normal;line-height:1.2}
 .rep tfoot td{font-weight:700;border-top:1px solid var(--line)}
+.rbar{display:flex;height:26px;border-radius:6px;overflow:hidden;background:var(--soft)}
+.rbar i{display:block;height:100%}
+.r1{background:var(--g1)} .r2{background:var(--c2)} .r3{background:var(--c1)} .r4{background:var(--g3)}
+.leg3{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px}
+.leg3 span{display:flex;align-items:center;gap:6px}.leg3 i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.p1{background:color-mix(in srgb,var(--g1) 18%,transparent);color:var(--g1)}
+.p2{background:color-mix(in srgb,var(--c1) 16%,transparent);color:var(--c1)}
+.p3{background:color-mix(in srgb,var(--g3) 30%,transparent);color:var(--ink)}
+.p4{background:color-mix(in srgb,var(--c2) 18%,transparent);color:var(--c2)}
+.search{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);width:100%;max-width:360px}
+.day{display:flex;flex-direction:column-reverse;background:transparent}
+.day i{display:block;width:100%}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px}
+#printArea{display:none}
 @media print{
-  @page{size:letter;margin:14mm}
-  body{background:#fff!important;color:#000!important}
-  #login,.tip,#panel>:not(.grid),.grid>:not(#rep){display:none!important}
-  #panel{padding:0;max-width:none}
-  #rep{display:block;border:0;padding:0;box-shadow:none;background:#fff;color:#000}
-  #rep h3{margin:16px 0 4px!important;break-after:avoid}
-  #rep tr{break-inside:avoid}
-  #rep td{padding:4px 8px}
-  #rep .noprint{display:none!important}
-  #rep .rephead{display:block}
-  #rep .tw{overflow:visible}
-  #rep td,#rep th{color:#000;border-color:#999}
-  #rep .note{color:#333}
+  @page{size:letter;margin:13mm}
+  #login,#panel,#tip{display:none!important}
+  #printArea{display:block!important;color:#000;font-family:var(--body);font-size:11.5px}
+  #printArea h1{font-size:18px} #printArea h2{font-size:14px;margin:14px 0 4px}
+  #printArea table{font-size:11px} #printArea td,#printArea th{color:#000;border-color:#aaa;padding:4px 6px;white-space:normal}
+  #printArea tr{break-inside:avoid} #printArea .note{color:#333}
+  #printArea td:nth-child(1),#printArea td:nth-child(3),#printArea td:nth-child(4){white-space:nowrap}
 }
 @media (prefers-reduced-motion:reduce){.fill,.day{transition:none}}
 </style>
 
 <div class="login" id="login">
   <form class="lcard" id="lForm" novalidate>
-    <span class="k">Consulta interna del PRM</span>
+    <span class="k">Control Verificate · PRM</span>
     <h1>Entrada del administrador</h1>
     <div class="f"><label for="aCed">Número de cédula</label><input id="aCed" type="tel" inputmode="numeric" placeholder="000-0000000-0" autocomplete="off"></div>
     <div class="f"><label for="aPin">PIN de 6 dígitos</label><input id="aPin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></div>
     <label style="display:flex;gap:8px;align-items:center;font-size:14px;margin:-4px 0 4px"><input type="checkbox" id="verPin" style="width:auto"> Ver el PIN que escribí</label>
     <p class="errmsg" id="lErr" hidden></p>
     <button type="submit" class="pri">Entrar</button>
-    <p class="note">Es la misma entrada que usan los encuestadores. La app revisa el rol de cada cédula: los encuestadores van al formulario y el administrador a este tablero.</p>
-    <div class="lhint"><b>Para probar esta vista previa:</b> cédula <b>001-0000001-1</b>, PIN <b>905317</b>.<br>Prueba también la cédula de un encuestador (402-1234567-1, PIN 731904): verás que no lo deja entrar aquí.</div>
+    <p class="note">El administrador escribe su PIN cada vez que entra, porque ve todos los datos.</p>
+    <div class="lhint"><b>Para probar:</b> cédula <b>001-0000001-1</b>, PIN <b>905317</b>.<br>Una cédula de encuestador (402-1234567-1, PIN 731904) no puede entrar aquí.</div>
   </form>
 </div>
 
 <div class="wrap" id="panel" hidden>
   <header class="hdr">
-    <div>
-    <h1>Consulta interna del PRM · Preferencia presidencial</h1>
-    <p class="sub">Panel del administrador. Los gráficos se actualizan solos con cada consulta enviada.</p>
-    </div>
+    <div><h1>Control Verificate · PRM</h1>
+    <p class="sub">Panel del administrador: cuántas personas se han verificado, cómo quedó cada una, quién la registró y cuándo.</p></div>
     <div class="who"><span id="adminName"></span><button type="button" id="logout">Cerrar sesión</button></div>
   </header>
 
   <div class="demo" role="note">
     <b>Datos de ejemplo</b>
-    <p>Estos números son inventados al azar para mostrar cómo funciona el tablero. No son resultados reales de ninguna consulta y no deben compartirse como tales.</p>
+    <p>Personas, cédulas y teléfonos inventados al azar para mostrar cómo funciona el panel. No son personas reales.</p>
     <button class="btn-demo" id="regen" type="button">Generar otros datos de ejemplo</button>
   </div>
 
   <div class="filters" aria-label="Filtros">
-    <div class="f"><label for="fProv">Provincia</label><select id="fProv"></select></div>
-    <div class="f"><label for="fSect">Sector</label><select id="fSect"></select></div>
-    <div class="f"><label for="fSexo">Sexo</label><select id="fSexo"></select></div>
-    <div class="f"><label for="fEdad">Edad</label><select id="fEdad"></select></div>
-    <div class="f"><label for="fMiem">Miembro PRM</label><select id="fMiem"></select></div>
+    <div class="f"><label for="fPer">Período</label><select id="fPer"><option value="">Todo</option><option value="0">Hoy</option><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option></select></div>
     <div class="f"><label for="fEnc">Encuestador</label><select id="fEnc"></select></div>
+    <div class="f"><label for="fRes">Resultado</label><select id="fRes"></select></div>
     <button id="clear" type="button">Limpiar filtros</button>
-    <div class="active" id="active"></div>
   </div>
 
   <section class="kpis" aria-label="Cifras clave">
-    <div class="kpi"><span class="k">Consultas</span><span class="v" id="kTot">0</span><span class="s" id="kTotS"></span></div>
-    <div class="kpi"><span class="k" id="kLeadK">Va primero</span><span class="v" id="kLead" style="font-size:20px">—</span><span class="s" id="kLeadS"></span></div>
-    <div class="kpi"><span class="k">Ninguno</span><span class="v" id="kNin">0%</span><span class="s">de las preferencias</span></div>
-    <div class="kpi"><span class="k">Nuevos inscritos</span><span class="v" id="kIns">0</span><span class="s" id="kInsS"></span></div>
-    <div class="kpi"><span class="k">Confirmados</span><span class="v" id="kConf">0</span><span class="s" id="kConfS"></span></div>
-    <div class="kpi"><span class="k">Hoy</span><span class="v" id="kHoy">0</span><span class="s">consultas enviadas</span></div>
+    <div class="kpi" style="border-color:var(--accent)"><span class="k">Verificados (total)</span><span class="v" id="kTot">0</span><span class="s" id="kTotS"></span></div>
+    <div class="kpi"><span class="k">✅ Ya eran miembros</span><span class="v" id="k1">0</span><span class="s" id="k1s"></span></div>
+    <div class="kpi"><span class="k">🔄 Ratificados</span><span class="v" id="k2">0</span><span class="s" id="k2s"></span></div>
+    <div class="kpi"><span class="k">🆕 Nuevos inscritos</span><span class="v" id="k3">0</span><span class="s" id="k3s"></span></div>
+    <div class="kpi"><span class="k">⚠️ No se pudo completar</span><span class="v" id="k4">0</span><span class="s" id="k4s"></span></div>
+    <div class="kpi"><span class="k">Hoy</span><span class="v" id="kHoy">0</span><span class="s">verificados hoy</span></div>
   </section>
 
   <section class="grid">
-    <div class="card wide">
-      <div><h2>Preferencia presidencial</h2><p class="note">Pregunta 3.1. Toca un aspirante para ver solo a sus votantes en los demás gráficos.</p></div>
-      <div class="bars" id="chPref"></div>
+    <div class="card">
+      <div><h2>Resultado en Verificate</h2><p class="note">Cómo quedaron las personas verificadas.</p></div>
+      <div class="rbar" id="rbar"></div>
+      <div class="leg3" id="leg3"></div>
     </div>
-    <div class="card wide">
-      <div><h2>Avance por día</h2><p class="note">Consultas enviadas en los últimos 14 días.</p></div>
+    <div class="card">
+      <div><h2>Avance por día</h2><p class="note">Personas verificadas en los últimos 14 días. Pase el dedo o el mouse sobre una barra para ver el detalle.</p></div>
       <div class="days" id="chDays"></div>
       <div class="dlab" id="chDaysL"></div>
     </div>
     <div class="card wide">
-      <div><h2>Consultas por sector y calle</h2><p class="note">Solo aparecen las calles donde ya se hicieron consultas, según los filtros de arriba (por ejemplo, un encuestador). Toca un sector para ver sus calles. Los grupos con menos de 5 consultas no muestran detalle, para proteger el voto secreto.</p></div>
+      <div><h2>Por encuestador</h2><p class="note">Toque un encuestador para ver solo sus registros. Cada encuestador ve su total de verificados en su celular. Si alguien tiene muchos "No se pudo completar", conviene preguntarle qué está pasando.</p></div>
       <div class="tw"><table>
-        <thead><tr><th>Provincia</th><th>Sector</th><th class="num">Calles</th><th class="num">Consultas</th><th>Va primero</th><th class="num">%</th></tr></thead>
-        <tbody id="tSect"></tbody>
-      </table></div>
-    </div>
-    <div class="card wide">
-      <div><h2>Consultas por encuestador</h2><p class="note">Para controlar el trabajo de campo y detectar cosas raras (por ejemplo, muchas consultas sin foto).</p></div>
-      <div class="tw"><table>
-        <thead><tr><th>Encuestador</th><th class="num">Consultas</th><th class="num">Con foto de cédula</th><th class="num">Provincias</th><th>Última consulta</th><th>Estado</th></tr></thead>
+        <thead><tr><th>Encuestador</th><th class="num">Verificados</th><th class="num">Ya miembros</th><th class="num">Ratificados</th><th class="num">Nuevos</th><th class="num">No completados</th><th>Último registro</th></tr></thead>
         <tbody id="tEnc"></tbody>
       </table></div>
     </div>
+    <div class="card wide" id="lista">
+      <div class="priv"><div><h2>Lista de personas</h2><p>Solo la ve el administrador. Respeta los filtros de arriba.</p></div>
+        <input class="search" id="q" type="search" placeholder="Buscar por nombre, cédula o teléfono" autocomplete="off"></div>
+      <p class="note" id="qInfo"></p>
+      <div class="tw"><table>
+        <thead><tr><th>Fecha</th><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Resultado</th><th>Encuestador</th></tr></thead>
+        <tbody id="tList"></tbody>
+      </table></div>
+      <button type="button" id="mas" hidden>Mostrar más</button>
+    </div>
+    <div class="card wide">
+      <div class="priv"><div><h2>Imprimir / Guardar en PDF</h2><p>Los dos reportes usan los filtros de arriba. En la ventana de imprimir, elija <b>Guardar como PDF</b>.</p></div></div>
+      <div class="btnrow"><button type="button" class="pri" id="pRes">Reporte de totales</button><button type="button" id="pList">Lista de personas</button></div>
+      <p class="note">⚠️ La <b>lista de personas</b> tiene nombres, cédulas y teléfonos. Entréguela solo a quien esté autorizado y nunca la suba a GitHub ni a grupos de WhatsApp.</p>
+    </div>
     <div class="card wide" id="encCard">
-      <div><h2>Encuestadores: registro y acceso</h2><p class="note">Solo el administrador agrega encuestadores. Cada consulta queda firmada con el nombre de quien la hizo.</p></div>
+      <div><h2>Encuestadores: registro y acceso</h2><p class="note">Solo el administrador agrega encuestadores. Cada registro queda firmado con el nombre de quien lo hizo. Si alguien pierde el celular o deja el grupo, toque Bloquear.</p></div>
       <form class="addrow" id="addForm" novalidate>
         <div class="f"><label for="nNom">Nombre y apellido</label><input id="nNom" type="text" placeholder="Ej.: Pedro Gómez" autocomplete="off"></div>
         <div class="f"><label for="nCed">Cédula</label><input id="nCed" type="tel" inputmode="numeric" placeholder="000-0000000-0" autocomplete="off"></div>
@@ -211,343 +222,129 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
       <p class="errmsg" id="addErr" hidden></p>
       <div class="codebox" id="codeBox" hidden></div>
       <div class="tw"><table>
-        <thead><tr><th>Nombre</th><th>Cédula</th><th>Estado</th><th class="num">Consultas</th><th>Acciones</th></tr></thead>
+        <thead><tr><th>Nombre</th><th>Cédula</th><th>Estado</th><th class="num">Registros</th><th>Acciones</th></tr></thead>
         <tbody id="tReg"></tbody>
       </table></div>
-    </div>
-    <div class="card wide" id="rep">
-      <div class="rephead">
-        <h2 style="font-size:18px">Reporte de la consulta · Consulta interna del PRM</h2>
-        <p class="note" id="repMeta"></p>
-      </div>
-      <div class="priv">
-        <div><h2 class="noprint">Reporte para imprimir</h2><p>Incluye los <b>resultados por aspirante</b> (total y por día) y las <b>inscripciones</b>. <b>Nuevos inscritos:</b> personas que no eran miembros y dijeron que sí desean inscribirse. <b>Confirmados:</b> el encuestador marcó que la página oficial del partido mostró la inscripción. Solo totales, sin nombres ni cédulas, y sin el voto.</p></div>
-        <button type="button" class="pri noprint" id="print">Imprimir / Guardar en PDF</button>
-      </div>
-      <p class="note noprint">Usa los mismos filtros de arriba (por ejemplo, una provincia o un encuestador). En la ventana de imprimir, elige <b>Guardar como PDF</b>.</p>
-      <h3 style="margin:4px 0 0;font-size:15px">1. Resultados por aspirante</h3>
-      <div class="tw"><table class="rep">
-        <thead><tr><th>Aspirante</th><th class="num">Consultas</th><th class="num">%</th></tr></thead>
-        <tbody id="rPref"></tbody><tfoot id="rPrefT"></tfoot>
-      </table></div>
-      <h3 style="margin:8px 0 0;font-size:15px">2. Resultados por día</h3>
-      <div class="tw"><table class="rep repday">
-        <thead id="rDayH"></thead><tbody id="rDay"></tbody><tfoot id="rDayT"></tfoot>
-      </table></div>
-      <p class="note" id="rDayN"></p>
-      <h3 style="margin:8px 0 0;font-size:15px">3. Inscripciones por sector</h3>
-      <div class="tw"><table class="rep">
-        <thead><tr><th>Provincia</th><th>Sector</th><th class="num">Nuevos inscritos</th><th class="num">Confirmados</th><th class="num">% confirmados</th></tr></thead>
-        <tbody id="rSect"></tbody><tfoot id="rSectT"></tfoot>
-      </table></div>
-      <h3 style="margin:8px 0 0;font-size:15px">4. Inscripciones por encuestador</h3>
-      <div class="tw"><table class="rep">
-        <thead><tr><th>Encuestador</th><th class="num">Nuevos inscritos</th><th class="num">Confirmados</th><th class="num">% confirmados</th></tr></thead>
-        <tbody id="rEnc"></tbody><tfoot id="rEncT"></tfoot>
-      </table></div>
-      <p class="rephead note" id="repDemo"></p>
-    </div>
-    <div class="card wide" id="sectCard">
-      <div><h2>Sectores por provincia</h2><p class="note">El encuestador solo puede elegir los sectores de esta lista. Así todos escriben el sector igual y los números no se dividen. Un sector solo se puede quitar si todavía no tiene consultas.</p></div>
-      <form class="addrow" id="sForm" novalidate>
-        <div class="f"><label for="sProv">Provincia</label><select id="sProv"></select></div>
-        <div class="f"><label for="sNom">Nombre del sector o barrio</label><input id="sNom" type="text" placeholder="Ej.: Los Mina" autocomplete="off"></div>
-        <button type="submit" class="pri">Agregar sector</button>
-      </form>
-      <p class="errmsg" id="sErr" hidden></p>
-      <p class="note" id="sOk" hidden></p>
-      <div class="tw"><table>
-        <thead><tr><th>Sector</th><th class="num">Consultas</th><th>Acción</th></tr></thead>
-        <tbody id="tSec"></tbody>
-      </table></div>
-    </div>
-    <div class="card wide">
-      <div class="priv">
-        <div><h2>Verificación de cédulas</h2><p>Sección privada del administrador. Las fotos se guardan aparte del voto, se abren con un enlace que vence en minutos y se borran al terminar la consulta.</p></div>
-      </div>
     </div>
   </section>
 </div>
 <div class="tip" id="tip" hidden></div>
-
+<div id="printArea"></div>
 <script>
 (() => {
-  const CANDS = ["Carolina Mejía","David Collado","Raquel Peña","Wellington Arnaud","Guido Gómez Mazara"];
-  const CCOL = ["var(--c1)","var(--c2)","var(--c5)","var(--c3)","var(--c4)"];
-  const NIN = "Ninguno";
-  const PROVS = ["Distrito Nacional","Santo Domingo","Santiago","La Vega","San Cristóbal","Puerto Plata","La Altagracia","Duarte"]; // solo para los datos de ejemplo
-  const TODAS = ["Azua","Bahoruco","Barahona","Dajabón","Distrito Nacional","Duarte","El Seibo","Elías Piña","Espaillat","Hato Mayor","Hermanas Mirabal","Independencia","La Altagracia","La Romana","La Vega","María Trinidad Sánchez","Monseñor Nouel","Monte Cristi","Monte Plata","Pedernales","Peravia","Puerto Plata","Samaná","San Cristóbal","San José de Ocoa","San Juan","San Pedro de Macorís","Sánchez Ramírez","Santiago","Santiago Rodríguez","Santo Domingo","Valverde"]; // las 31 provincias y el Distrito Nacional
-  const SECT = {
-    "Distrito Nacional":["Gualey","Capotillo","Cristo Rey","Villa Juana","Los Guandules"],
-    "Santo Domingo":["Los Mina","Villa Mella","Los Alcarrizos","Sabana Perdida","Invivienda"],
-    "Santiago":["Cienfuegos","Pekín","Los Salados","Gurabo"],
-    "La Vega":["Villa Rosa","Palmarito","Las Carolinas"],
-    "San Cristóbal":["Madre Vieja","Canastica","Lavapiés"],
-    "Puerto Plata":["Padre Granero","Los Domínguez","San Marcos"],
-    "La Altagracia":["Juan Pablo Duarte","Villa Cerro","Friusa"],
-    "Duarte":["Los Rieles","Vista al Valle","Pueblo Nuevo"]};
-  const CALLES = ["Calle Principal","Calle Duarte","Calle 1ra","Calle 2da","Calle 3ra","Calle Sánchez","Calle Mella","Callejón 4","Calle Respaldo","Calle 27 de Febrero"];
-  const EDADES = ["18–35","36–45","46–59","60 o más"];
-  const GES = ["Excelente","Buena","Regular","Mala","No conoce su gestión"];
-  const GCOL = ["var(--g1)","var(--g2)","var(--g3)","var(--g4)","var(--g5)"];
-  const ENC = ["Juan Pérez","María Santos","Pedro Martínez","Ana Reyes","Luis Féliz","Carmen Rosario","José Batista","Rosa Jiménez","Miguel Castillo","Yolanda Peña"];
-  const fmtCed = d=>`${d.slice(0,3)}-${d.slice(3,10)}-${d.slice(10)}`;
-  const newCode = ()=>String(Math.floor(100000+Math.random()*900000));
-  const REGISTRO = ENC.map((n,i)=>({nombre:n, ced:fmtCed(String(40200000000+i*7310459+1234567).padStart(11,"0")), estado:"Activo", codigo:null}));
-  REGISTRO.push({nombre:"Ramón Taveras", ced:"001-7654321-0", estado:"Pendiente", codigo:newCode()});
-  const nf = new Intl.NumberFormat("es-DO");
-  const pf = (x)=> (x*100).toLocaleString("es-DO",{maximumFractionDigits:1,minimumFractionDigits:1})+"%";
-  const $ = (id)=>document.getElementById(id);
-  const pick = (arr,w)=>{ let r=Math.random()*w.reduce((a,b)=>a+b,0); for(let i=0;i<arr.length;i++){ r-=w[i]; if(r<=0) return arr[i]; } return arr[arr.length-1]; };
-
-  let DATA = [], sel = null, openSect = null;
-  const MIN = 5; // para proteger el voto secreto, no se muestran detalles de grupos con menos de 5 consultas
-  const today = new Date(); today.setHours(12,0,0,0);
+  const RES=["Ya era miembro","Ratificado","Nuevo inscrito","No se pudo completar"], RI=["✅","🔄","🆕","⚠️"], RC=["p1","p4","p2","p3"];
+  const PROVS=["Distrito Nacional","Santo Domingo","Santiago","La Vega","San Cristóbal","Puerto Plata","La Altagracia","Duarte"]; // solo para los datos de ejemplo
+  const TODAS=["Azua","Bahoruco","Barahona","Dajabón","Distrito Nacional","Duarte","El Seibo","Elías Piña","Espaillat","Hato Mayor","Hermanas Mirabal","Independencia","La Altagracia","La Romana","La Vega","María Trinidad Sánchez","Monseñor Nouel","Monte Cristi","Monte Plata","Pedernales","Peravia","Puerto Plata","Samaná","San Cristóbal","San José de Ocoa","San Juan","San Pedro de Macorís","Sánchez Ramírez","Santiago","Santiago Rodríguez","Santo Domingo","Valverde"];
+  const SECT={"Distrito Nacional":["Gualey","Capotillo","Cristo Rey","Villa Juana","Los Guandules"],"Santo Domingo":["Los Mina","Villa Mella","Los Alcarrizos","Sabana Perdida","Invivienda"],"Santiago":["Cienfuegos","Pekín","Los Salados","Gurabo"],"La Vega":["Villa Rosa","Palmarito","Las Carolinas"],"San Cristóbal":["Madre Vieja","Canastica","Lavapiés"],"Puerto Plata":["Padre Granero","Los Domínguez","San Marcos"],"La Altagracia":["Juan Pablo Duarte","Villa Cerro","Friusa"],"Duarte":["Los Rieles","Vista al Valle","Pueblo Nuevo"]};
+  const CALLES=["Calle Principal","Calle Duarte","Calle 1ra","Calle 2da","Calle Sánchez","Calle Mella","Callejón 4","Calle Respaldo"];
+  const NOMS=["Juana","Pedro","Ana","Luis","Carmen","José","Rosa","Miguel","Yolanda","Ramón","Altagracia","Francisco","Mercedes","Rafael","Josefina","Manuel","Teresa","Julio","Esperanza","Félix"];
+  const APES=["Pérez","Rodríguez","Gómez","Martínez","Reyes","Santana","Féliz","Batista","Jiménez","Castillo","Peña","Taveras","Almonte","Vásquez","De la Cruz","Mejía","Rosario","Polanco"];
+  const NOTAS=["La página no cargó","Falló la prueba de vida","No quiso terminar","Sin señal de internet"];
+  const ENC=["Juan Pérez","María Santos","Pedro Martínez","Ana Reyes","Luis Féliz","Carmen Rosario","José Batista"];
+  const fmtCed=d=>`${d.slice(0,3)}-${d.slice(3,10)}-${d.slice(10)}`;
+  const fmtTel=d=>`${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}`;
+  const chk=d=>{let s=0;for(let i=0;i<10;i++){let n=+d[i]*(i%2?2:1);s+=n>9?n-9:n;}return (10-s%10)%10;};
+  const newCode=()=>String(Math.floor(100000+Math.random()*900000));
+  const REGISTRO=ENC.map((n,i)=>({nombre:n,ced:fmtCed(String(40200000000+i*7310459+1234567).padStart(11,"0")),estado:"Activo",codigo:null}));
+  REGISTRO.push({nombre:"Ramón Taveras",ced:"001-7654321-0",estado:"Pendiente",codigo:newCode()});
+  const nf=new Intl.NumberFormat("es-DO");
+  const pf=x=>(x*100).toLocaleString("es-DO",{maximumFractionDigits:1,minimumFractionDigits:1})+"%";
+  const $=id=>document.getElementById(id);
+  const rnd=a=>a[Math.floor(Math.random()*a.length)];
+  const pick=(arr,w)=>{let r=Math.random()*w.reduce((a,b)=>a+b,0);for(let i=0;i<arr.length;i++){r-=w[i];if(r<=0)return arr[i];}return arr[arr.length-1];};
+  let DATA=[];
+  const today=new Date();
+  const fFecha=d=>d.toLocaleDateString("es-DO",{day:"numeric",month:"short"})+" "+d.toLocaleTimeString("es-DO",{hour:"numeric",minute:"2-digit"});
 
   function generate(){
-    const w = CANDS.map(()=>0.6+Math.random()*0.8);
-    const provW = [1.4,1.6,1.3,0.7,0.8,0.6,0.5,0.6].map(x=>x*(0.7+Math.random()*0.6));
-    const gesBias = CANDS.map(()=>[Math.random(),Math.random(),Math.random(),Math.random()*0.6,0.3+Math.random()*0.6]);
-    const encW = ENC.map(()=>0.4+Math.random());
-    const out = [];
-    const n = 900 + Math.floor(Math.random()*500);
+    const encW=ENC.map(()=>0.5+Math.random()), provW=PROVS.map(()=>0.5+Math.random());
+    const malo=rnd(ENC), usadas=new Set(), out=[];
+    const n=450+Math.floor(Math.random()*250);
     for(let i=0;i<n;i++){
-      const pref = pick([...CANDS,NIN],[...w,0.35]);
-      const others = CANDS.filter(c=>c!==pref);
-      const seg = pick([...others,NIN],[...others.map(c=>w[CANDS.indexOf(c)]),0.5]);
-      const d = Math.floor(Math.pow(Math.random(),0.8)*14);
-      const fecha = new Date(today); fecha.setDate(today.getDate()-d);
-      const miembro = Math.random()<0.62;
-      out.push({
-        ...(()=>{const pv=pick(PROVS,provW); const ss=SECT[pv]; return {prov:pv, sect:ss[Math.floor(Math.random()*ss.length)], calle:CALLES[Math.floor(Math.random()*(4+Math.random()*6))]};})(), sexo: Math.random()<0.52?"Femenino":"Masculino",
-        edad: pick(EDADES,[1.1,1.3,1,0.7]), miembro: miembro?"Sí":"No",
-        inscribir: !miembro && Math.random()<0.38,
-        confirmado: false,
-        pref, seg, seguro: Math.random()<(pref===NIN?0.3:0.55+Math.random()*0.25)?"Muy seguro":"Puede cambiar",
-        ges: CANDS.map((c,ci)=>pick(GES,gesBias[ci])),
-        enc: pick(ENC,encW), fecha, foto: Math.random()<0.93
-      });
+      let b; do{b=String(Math.floor(Math.random()*4)).padStart(3,"0").replace(/^000$/,"001")+String(Math.floor(Math.random()*1e7)).padStart(7,"0");}while(usadas.has(b)); usadas.add(b);
+      const d=b+chk(b);
+      const enc=pick(ENC,encW), pv=pick(PROVS,provW);
+      const res=pick(RES,enc===malo?[0.35,0.1,0.2,0.35]:[0.42,0.18,0.28,0.12]);
+      const f=new Date(today); f.setDate(today.getDate()-Math.floor(Math.pow(Math.random(),0.8)*21)); f.setHours(8+Math.floor(Math.random()*10),Math.floor(Math.random()*60),0,0);
+      if(f>today) f.setTime(today.getTime()-Math.random()*3600e3);
+      out.push({fecha:f,nom:`${rnd(NOMS)} ${rnd(APES)} ${rnd(APES)}`,ced:fmtCed(d),tel:fmtTel(rnd(["809","829","849"])+String(Math.floor(Math.random()*1e7)).padStart(7,"0")),
+        res,nota:res===RES[3]?rnd(NOTAS):"",enc});
     }
-    // un encuestador con pocas fotos, para mostrar la alerta
-    const raro = ENC[Math.floor(Math.random()*ENC.length)];
-    out.forEach(r=>{ if(r.enc===raro && Math.random()<0.45) r.foto=false; });
-    out.forEach(r=>{ if(r.inscribir) r.confirmado = Math.random()<0.62; });
-    return out;
+    return out.sort((a,b)=>b.fecha-a.fecha);
   }
 
-  function fillSelect(id, label, opts){
-    const s=$(id); s.replaceChildren(new Option("Todos",""), ...opts.map(o=>new Option(o,o)));
-    s.addEventListener("change", render);
+  // ===== Filtros =====
+  const fill=(id,opts)=>{$(id).replaceChildren(new Option("Todos",""),...opts.map(o=>new Option(o,o)));};
+  fill("fEnc",ENC); fill("fRes",RES);
+  ["fPer","fEnc","fRes"].forEach(id=>$(id).addEventListener("change",render));
+  function filtered(){
+    const per=$("fPer").value, f={enc:$("fEnc").value,res:$("fRes").value};
+    let desde=null; if(per!==""){desde=new Date(today);desde.setHours(0,0,0,0);desde.setDate(desde.getDate()-(+per===0?0:+per-1));}
+    return DATA.filter(r=>Object.entries(f).every(([k,v])=>!v||r[k]===v)&&(!desde||r.fecha>=desde));
   }
-  fillSelect("fProv","Provincia",TODAS);
-  const fillSect=()=>{const pv=$("fProv").value; const opts=pv?(SECT[pv]||[]):Object.values(SECT).flat(); const cur=$("fSect").value;
-    $("fSect").replaceChildren(new Option("Todos",""),...opts.map(o=>new Option(o,o))); $("fSect").value=opts.includes(cur)?cur:"";};
-  fillSect(); $("fProv").addEventListener("change",()=>{fillSect();render();},{capture:true}); $("fSect").addEventListener("change",render); fillSelect("fSexo","Sexo",["Femenino","Masculino"]);
-  fillSelect("fEdad","Edad",EDADES); fillSelect("fMiem","Miembro",["Sí","No"]); fillSelect("fEnc","Encuestador",ENC);
-
-  function filtered(includeSel){
-    const f={prov:$("fProv").value,sect:$("fSect").value,sexo:$("fSexo").value,edad:$("fEdad").value,miembro:$("fMiem").value,enc:$("fEnc").value};
-    return DATA.filter(r=>Object.entries(f).every(([k,v])=>!v||r[k]===v) && (!includeSel||!sel||r.pref===sel));
-  }
+  const filtrosTxt=()=>{const a=[];if($("fPer").value!=="")a.push($("fPer").selectedOptions[0].text);["fEnc","fRes"].forEach(id=>{if($(id).value)a.push($(id).value);});return a.length?a.join(", "):"ninguno (todo)";};
 
   const tip=$("tip");
-  function bindTip(el,text){
-    el.addEventListener("pointermove",e=>{tip.textContent=text;tip.hidden=false;
-      const x=Math.min(e.clientX+12, window.innerWidth-tip.offsetWidth-8); tip.style.left=x+"px"; tip.style.top=(e.clientY+14)+"px";});
-    el.addEventListener("pointerleave",()=>{tip.hidden=true;});
-  }
+  function bindTip(el,text){el.addEventListener("pointermove",e=>{tip.textContent=text;tip.hidden=false;
+    const x=Math.min(e.clientX+12,window.innerWidth-tip.offsetWidth-8);tip.style.left=x+"px";tip.style.top=(e.clientY+14)+"px";});
+    el.addEventListener("pointerleave",()=>{tip.hidden=true;});}
+  function row(host,vals,numFrom,click){const tr=document.createElement("tr");vals.forEach((v,i)=>{const td=document.createElement("td");if(i>=numFrom)td.className="num";
+    if(v instanceof Node)td.append(v);else td.textContent=v;tr.append(td);});if(click){tr.className="clk";tr.addEventListener("click",click);}host.append(tr);return tr;}
+  const pill=res=>{const i=RES.indexOf(res),s=document.createElement("span");s.className="pill "+RC[i];s.textContent=RI[i]+" "+res;return s;};
+  const cuenta=l=>RES.map(r=>l.filter(x=>x.res===r).length);
 
-  function barList(host, rows, total, opts={}){
-    host.replaceChildren();
-    const max = Math.max(...rows.map(r=>r.v),1);
-    rows.forEach((r,i)=>{
-      const row=document.createElement("div"); row.className="bar"+(opts.clickable&&sel===r.name?" sel":"");
-      const n=document.createElement("span"); n.className="n"; n.textContent=r.name;
-      if(opts.leadName===r.name){ const l=document.createElement("span"); l.className="lead"; l.textContent="1º"; n.append(l); }
-      const t=document.createElement("div"); t.className="track";
-      const f=document.createElement("div"); f.className="fill"; f.style.background=r.color; f.style.width=(total? r.v/max*100:0)+"%";
-      t.append(f);
-      const p=document.createElement("span"); p.className="p";
-      if(total){ const b=document.createElement("b"); b.textContent=nf.format(r.v); const sp=document.createElement("span"); sp.textContent=" · "+pf(r.v/total); p.append(b,sp); } else p.textContent="—";
-      row.append(n,t,p);
-      bindTip(row, `${r.name}: ${nf.format(r.v)} personas de ${nf.format(total)} consultas`);
-      if(opts.clickable){ row.tabIndex=0; row.setAttribute("role","button");
-        const act=()=>{ sel = (sel===r.name?null:r.name); render(); };
-        row.addEventListener("click",act); row.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();act();}}); }
-      host.append(row);
-    });
-  }
-
-  function stacked(host, rows){
-    host.replaceChildren();
-    rows.forEach(r=>{
-      const row=document.createElement("div"); row.className="bar"; row.style.cursor="default";
-      const n=document.createElement("span"); n.className="n"; n.textContent=r.name;
-      const t=document.createElement("div"); t.className="track";
-      const tot=r.parts.reduce((a,b)=>a+b.v,0);
-      r.parts.forEach(pt=>{ const f=document.createElement("div"); f.className="fill"; f.style.background=pt.color; f.style.width=(tot?pt.v/tot*100:0)+"%";
-        bindTip(f, `${r.name} · ${pt.label}: ${tot?pf(pt.v/tot):"—"} (${nf.format(pt.v)})`); t.append(f); });
-      const p=document.createElement("span"); p.className="p"; p.textContent= tot? pf(r.parts[0].v/tot):"—";
-      row.append(n,t,p); host.append(row);
-    });
-  }
-
+  let lim=50;
   function render(){
-    const base = filtered(false), rows = filtered(true);
-    const total = base.length;
-    // filtros activos
-    const act=[["fProv"],["fSect","Sector "],["fSexo"],["fEdad"],["fMiem","Miembro: "],["fEnc"]].map(([id,p])=>$(id).value?(p||"")+$(id).value:null).filter(Boolean);
-    if(sel) act.push("Votantes de "+sel);
-    $("active").textContent = act.length? "Viendo: "+act.join(" · "):"";
-
-    // preferencia (sin el filtro del aspirante seleccionado)
-    const prefCounts=[...CANDS,NIN].map((c,i)=>({name:c,v:base.filter(r=>r.pref===c).length,color:i<CANDS.length?CCOL[i]:"var(--c0)"}));
-    const ranked=[...prefCounts.slice(0,CANDS.length)].sort((a,b)=>b.v-a.v);
-    barList($("chPref"), prefCounts, total, {clickable:true, leadName: total?ranked[0].name:null});
-
-    // KPIs
-    $("kTot").textContent=nf.format(rows.length);
-    $("kTotS").textContent = sel? `votantes de ${sel}` : `de ${nf.format(DATA.length)} en total`;
-    if(total && sel){
-      // Aspirante elegido: su porcentaje y en qué lugar va
-      const me=prefCounts.find(x=>x.name===sel);
-      $("kLeadK").textContent= sel===NIN? "Opción elegida" : "Aspirante elegido";
-      $("kLead").textContent=sel;
-      if(sel===NIN){ $("kLeadS").textContent=`${pf(me.v/total)} de las preferencias`; }
-      else {
-        const pos=ranked.filter(x=>x.v>me.v).length+1, empate=ranked.filter(x=>x.v===me.v).length>1;
-        const otro= pos===1 ? ranked.find(x=>x.name!==sel) : ranked[0];
-        const dif=Math.abs(me.v-otro.v)/total;
-        $("kLeadS").textContent = `${pf(me.v/total)} · ${pos}º lugar` + (empate? " (empatado)" : pos===1? ` · ventaja de ${pf(dif)} sobre ${otro.name}` : ` · a ${pf(dif)} de ${otro.name}`);
-      }
-    } else if(total){ const gap=ranked[0].v-ranked[1].v;
-      $("kLeadK").textContent="Va primero";
-      $("kLead").textContent= gap===0? "Empate" : ranked[0].name;
-      $("kLeadS").textContent= gap===0? `${ranked[0].name} y ${ranked[1].name} con ${pf(ranked[0].v/total)} cada uno` : `${pf(ranked[0].v/total)} · ventaja de ${pf(gap/total)} sobre ${ranked[1].name}`;
-    } else { $("kLeadK").textContent="Va primero"; $("kLead").textContent="—"; $("kLeadS").textContent="Sin consultas con estos filtros"; }
-    $("kNin").textContent= total? pf(prefCounts[CANDS.length].v/total):"—";
-    const ins=rows.filter(r=>r.inscribir).length, noMiem=rows.filter(r=>r.miembro==="No").length;
-    $("kIns").textContent=nf.format(ins); $("kInsS").textContent=noMiem?`${pf(ins/noMiem)} de los no inscritos`:"";
-    const conf=rows.filter(r=>r.confirmado).length;
-    $("kConf").textContent=nf.format(conf); $("kConfS").textContent=ins?`${pf(conf/ins)} de los nuevos inscritos`:"";
+    const rows=filtered(), T=rows.length, c=cuenta(rows);
+    $("kTot").textContent=nf.format(T); $("kTotS").textContent=T===DATA.length?"en total":`de ${nf.format(DATA.length)} en total`;
+    c.forEach((v,i)=>{$("k"+(i+1)).textContent=nf.format(v);$("k"+(i+1)+"s").textContent=T?pf(v/T)+" de los verificados":"";});
     $("kHoy").textContent=nf.format(rows.filter(r=>r.fecha.toDateString()===today.toDateString()).length);
-
+    // barra de resultados
+    $("rbar").replaceChildren(...c.map((v,i)=>{const e=document.createElement("i");e.className="r"+(i+1);e.style.width=(T?v/T*100:0)+"%";bindTip(e,`${RES[i]}: ${nf.format(v)} (${T?pf(v/T):"—"})`);return e;}));
+    $("leg3").replaceChildren(...c.map((v,i)=>{const s=document.createElement("span");const k=document.createElement("i");k.className="r"+(i+1);s.append(k,`${RES[i]}: ${nf.format(v)} · ${T?pf(v/T):"—"}`);return s;}));
     // días
-    const days=[...Array(14)].map((_,i)=>{const d=new Date(today); d.setDate(today.getDate()-13+i); return d;});
-    const dc=days.map(d=>rows.filter(r=>r.fecha.toDateString()===d.toDateString()).length);
-    const dm=Math.max(...dc,1);
-    $("chDays").replaceChildren(...dc.map((v,i)=>{const b=document.createElement("div"); b.className="day"; b.style.height=(v/dm*100)+"%";
-      bindTip(b, `${days[i].toLocaleDateString("es-DO",{weekday:"short",day:"numeric",month:"short"})}: ${nf.format(v)} consultas`); return b;}));
-    $("chDaysL").replaceChildren(...days.map((d,i)=>{const s=document.createElement("span"); s.textContent=(i%2===1||i===13)?d.getDate():""; return s;}));
-
-    // sectores
-    const ts=$("tSect"); ts.replaceChildren();
-    const keys=[...new Set(rows.map(r=>r.prov+"|"+r.sect))];
-    keys.map(k=>{const [pv,sc]=k.split("|"); const s=rows.filter(r=>r.prov===pv&&r.sect===sc);
-      const cc=CANDS.map(c=>s.filter(r=>r.pref===c).length); const mi=cc.indexOf(Math.max(...cc));
-      return {k,pv,sc,s,n:s.length,calles:new Set(s.map(r=>r.calle)).size,lead:CANDS[mi],lp:s.length?cc[mi]/s.length:0};})
-     .sort((a,b)=>b.n-a.n).forEach(x=>{
-       const tr=document.createElement("tr"); tr.className="clk"; tr.tabIndex=0;
-       const few=x.n<MIN;
-       [x.pv,x.sc,x.calles,few?"menos de "+MIN:nf.format(x.n),few?"—":x.lead,few?"—":pf(x.lp)].forEach((v,i)=>{const td=document.createElement("td"); if([2,3,5].includes(i)) td.className="num"; td.textContent=v; tr.append(td);});
-       const toggle=()=>{openSect=openSect===x.k?null:x.k; render();};
-       tr.addEventListener("click",toggle); tr.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();toggle();}});
-       ts.append(tr);
-       if(openSect===x.k){
-         [...new Set(x.s.map(r=>r.calle))].map(c=>({c,n:x.s.filter(r=>r.calle===c).length})).sort((a,b)=>b.n-a.n).forEach(y=>{
-           const sr=document.createElement("tr"); sr.className="sub";
-           ["","↳ "+y.c,"",y.n<MIN?"menos de "+MIN:nf.format(y.n),"",""].forEach((v,i)=>{const td=document.createElement("td"); if(i===3) td.className="num"; td.textContent=v; sr.append(td);});
-           ts.append(sr);});
-       }
-     });
-
-    // encuestadores
-    const tb=$("tEnc"); tb.replaceChildren();
-    ENC.map(e=>{const s=rows.filter(r=>r.enc===e); return {e,n:s.length,foto:s.filter(r=>r.foto).length,prov:new Set(s.map(r=>r.prov)).size,ult:s.reduce((m,r)=>r.fecha>m?r.fecha:m,new Date(0))};})
-      .sort((a,b)=>b.n-a.n).forEach(x=>{
-        const tr=document.createElement("tr");
-        const share=x.n?x.foto/x.n:0, ok=share>=0.85;
-        const cells=[x.e,nf.format(x.n),x.n?pf(share):"—",x.prov,x.n?x.ult.toLocaleDateString("es-DO",{day:"numeric",month:"short"}):"—"];
-        cells.forEach((v,i)=>{const td=document.createElement("td"); if(i>0&&i<4) td.className="num"; td.textContent=v; tr.append(td);});
-        const td=document.createElement("td"); const p=document.createElement("span"); p.className="pill "+(ok?"ok":"bad"); p.textContent=x.n?(ok?"Normal":"Revisar fotos"):"Sin datos"; td.append(p); tr.append(td);
-        tb.append(tr);
-      });
-    renderRep();
+    const days=[...Array(14)].map((_,i)=>{const d=new Date(today);d.setDate(today.getDate()-13+i);return d;});
+    const dc=days.map(d=>{const l=rows.filter(r=>r.fecha.toDateString()===d.toDateString());return {n:l.length,c:cuenta(l)};});
+    const dm=Math.max(1,...dc.map(x=>x.n));
+    $("chDays").replaceChildren(...dc.map((x,i)=>{const b=document.createElement("div");b.className="day";b.style.height=(x.n/dm*100)+"%";
+      x.c.forEach((v,j)=>{const s=document.createElement("i");s.className="r"+(j+1);s.style.height=(x.n?v/x.n*100:0)+"%";b.append(s);});
+      bindTip(b,`${days[i].toLocaleDateString("es-DO",{weekday:"short",day:"numeric",month:"short"})}: ${x.n} verificados (✅ ${x.c[0]} · 🔄 ${x.c[1]} · 🆕 ${x.c[2]} · ⚠️ ${x.c[3]})`);return b;}));
+    $("chDaysL").replaceChildren(...days.map((d,i)=>{const s=document.createElement("span");s.textContent=(i%2===1||i===13)?d.getDate():"";return s;}));
+    // por encuestador
+    const te=$("tEnc");te.replaceChildren();
+    ENC.map(e=>{const l=rows.filter(r=>r.enc===e);return {e,l,c:cuenta(l)};}).filter(x=>x.l.length).sort((a,b)=>b.l.length-a.l.length)
+      .forEach(x=>row(te,[x.e,nf.format(x.l.length),nf.format(x.c[0]),nf.format(x.c[1]),nf.format(x.c[2]),`${nf.format(x.c[3])} (${pf(x.c[3]/x.l.length)})`,fFecha(x.l[0].fecha)],1,()=>{$("fEnc").value=x.e;render();}));
+    if(!te.children.length)row(te,["Sin registros con estos filtros"],9);
+    renderList(); renderReg();
   }
+  function listaFiltrada(){const q=$("q").value.trim().toLowerCase(), qd=q.replace(/\D/g,"");
+    return filtered().filter(r=>!q||r.nom.toLowerCase().includes(q)||(qd.length>=3&&(r.ced.replace(/\D/g,"").includes(qd)||r.tel.replace(/\D/g,"").includes(qd))));}
+  function renderList(){const l=listaFiltrada(), tb=$("tList"); tb.replaceChildren();
+    l.slice(0,lim).forEach(r=>{const tr=row(tb,[fFecha(r.fecha),r.nom,r.ced,r.tel,pill(r.res),r.enc],99); if(r.nota) tr.title="Nota: "+r.nota;});
+    if(!l.length)row(tb,["No hay personas con esta búsqueda o estos filtros"],99);
+    $("qInfo").textContent=`${nf.format(l.length)} ${l.length===1?"persona":"personas"}. ${l.length>lim?`Se muestran las ${lim} más recientes.`:""}`;
+    $("mas").hidden=l.length<=lim;}
+  $("q").addEventListener("input",()=>{lim=50;renderList();});
+  $("mas").addEventListener("click",()=>{lim+=100;renderList();});
 
-  // Reporte de inscripciones: solo totales. Usa los filtros, pero nunca el filtro por aspirante (el voto no se mezcla con la inscripción).
-  function cellRow(host,vals,numFrom){const tr=document.createElement("tr");vals.forEach((v,i)=>{const td=document.createElement("td");if(i>=numFrom)td.className="num";td.textContent=v;tr.append(td);});host.append(tr);}
-  function renderRep(){
-    // --- Resultados por aspirante (nunca usa el filtro de aspirante elegido) ---
-    const todas=filtered(false), T=todas.length, OPC=[...CANDS,NIN], poco=T<MIN;
-    const rp=$("rPref"); rp.replaceChildren();
-    OPC.map(c=>({c,v:todas.filter(r=>r.pref===c).length})).forEach(x=>cellRow(rp,[x.c,poco?"—":nf.format(x.v),poco||!T?"—":pf(x.v/T)],1));
-    $("rPrefT").replaceChildren(); cellRow($("rPrefT"),["Total",nf.format(T),T&&!poco?"100%":"—"],1);
-    // --- Resultados por día ---
-    // Para proteger el voto secreto, cada fila debe tener al menos MIN consultas.
-    // Los días con pocas consultas se juntan con los días siguientes hasta llegar a MIN.
-    const hr=document.createElement("tr");
-    ["Fecha",...OPC,"Total"].forEach((h,i)=>{const th=document.createElement("th");th.textContent=h;if(i)th.className="num";hr.append(th);});
-    $("rDayH").replaceChildren(hr);
-    const fd=d=>d.toLocaleDateString("es-DO",{day:"numeric",month:"short"});
-    const dias=[...new Set(todas.map(r=>r.fecha.toDateString()))].map(d=>new Date(d)).sort((a,b)=>b-a);
-    const grupos=[]; let g=null;
-    dias.forEach(d=>{const del=todas.filter(r=>r.fecha.toDateString()===d.toDateString());
-      if(!g) g={desde:d,hasta:d,rows:[]}; g.desde=d; g.rows.push(...del);
-      if(g.rows.length>=MIN){grupos.push(g); g=null;}});
-    let juntos=false;
-    if(g){ if(grupos.length){const u=grupos[grupos.length-1]; u.desde=g.desde; u.rows.push(...g.rows);} else grupos.push(g); }
-    const rd=$("rDay"); rd.replaceChildren();
-    grupos.forEach(x=>{
-      const un=x.desde.toDateString()===x.hasta.toDateString(); if(!un) juntos=true;
-      const fecha= un ? x.hasta.toLocaleDateString("es-DO",{weekday:"short",day:"numeric",month:"short"}) : `${fd(x.desde)} al ${fd(x.hasta)}`;
-      const ok=x.rows.length>=MIN;
-      cellRow(rd,[fecha,...OPC.map(c=>ok?nf.format(x.rows.filter(r=>r.pref===c).length):"—"),nf.format(x.rows.length)],1);});
-    if(!dias.length) cellRow(rd,["Sin datos con estos filtros",...OPC.map(()=>""),""],99);
-    $("rDayT").replaceChildren(); cellRow($("rDayT"),["Total",...OPC.map(c=>poco?"—":nf.format(todas.filter(r=>r.pref===c).length)),nf.format(T)],1);
-    $("rDayN").textContent= poco ? `Este grupo tiene menos de ${MIN} consultas: no se muestra por quién votaron, para proteger el voto secreto.`
-      : juntos ? `Los días con menos de ${MIN} consultas se juntaron con los días cercanos (por ejemplo "3 nov al 5 nov"). Así nadie puede adivinar el voto de una persona.` : "";
-    // --- Inscripciones ---
-    const base=todas.filter(r=>r.inscribir);
-    const pc=(c,i)=>i?pf(c/i):"—";
-    const rs=$("rSect"); rs.replaceChildren();
-    [...new Set(base.map(r=>r.prov+"|"+r.sect))].map(k=>{const [pv,sc]=k.split("|");const s=base.filter(r=>r.prov===pv&&r.sect===sc);return {pv,sc,i:s.length,c:s.filter(r=>r.confirmado).length};})
-      .sort((a,b)=>b.i-a.i).forEach(x=>cellRow(rs,[x.pv,x.sc,nf.format(x.i),nf.format(x.c),pc(x.c,x.i)],2));
-    if(!base.length) cellRow(rs,["Sin datos con estos filtros","","","",""],9);
-    const I=base.length,C=base.filter(r=>r.confirmado).length;
-    $("rSectT").replaceChildren(); cellRow($("rSectT"),["Total","",nf.format(I),nf.format(C),pc(C,I)],2);
-    const re=$("rEnc"); re.replaceChildren();
-    ENC.map(e=>{const s=base.filter(r=>r.enc===e);return {e,i:s.length,c:s.filter(r=>r.confirmado).length};}).filter(x=>x.i).sort((a,b)=>b.i-a.i)
-      .forEach(x=>cellRow(re,[x.e,nf.format(x.i),nf.format(x.c),pc(x.c,x.i)],1));
-    $("rEncT").replaceChildren(); cellRow($("rEncT"),["Total",nf.format(I),nf.format(C),pc(C,I)],1);
-    const act=[["fProv"],["fSect","Sector "],["fSexo"],["fEdad"],["fMiem","Miembro: "],["fEnc"]].map(([id,p])=>$(id).value?(p||"")+$(id).value:null).filter(Boolean);
-    $("repMeta").textContent=`Fecha: ${new Date().toLocaleString("es-DO",{dateStyle:"long",timeStyle:"short"})} · Preparado por: ${$("adminName").textContent.replace("Administrador: ","")} · Filtros: ${act.length?act.join(", "):"ninguno (todo)"}`;
-    $("repDemo").textContent="DATOS DE EJEMPLO: estos números son inventados para mostrar el formato. No son resultados reales.";
-  }
-  // Sectores por provincia (los carga el administrador)
-  const norm=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
-  const sProv=$("sProv"); sProv.replaceChildren(...TODAS.map(p=>new Option(p,p))); sProv.value="Santo Domingo";
-  function renderSec(){
-    const pv=sProv.value, l=SECT[pv]||[], tb=$("tSec"); tb.replaceChildren();
-    if(!l.length){const tr=document.createElement("tr");const td=document.createElement("td");td.colSpan=3;td.textContent="Esta provincia todavía no tiene sectores. Agregue el primero arriba.";td.className="note";tr.append(td);tb.append(tr);return;}
-    [...l].sort((a,b)=>a.localeCompare(b,"es")).forEach(sc=>{
-      const n=DATA.filter(r=>r.prov===pv&&r.sect===sc).length;
-      const tr=document.createElement("tr");
-      const t1=document.createElement("td");t1.textContent=sc;
-      const t2=document.createElement("td");t2.className="num";t2.textContent=nf.format(n);
-      const t3=document.createElement("td");const bt=document.createElement("button");bt.type="button";bt.textContent="Quitar";bt.style.cssText="padding:4px 9px;font-size:12px";
-      if(n){bt.disabled=true;bt.title="Tiene consultas: no se puede quitar";bt.style.opacity=.45;}
-      bt.addEventListener("click",()=>{SECT[pv]=l.filter(x=>x!==sc);$("sOk").textContent=`Se quitó "${sc}" de ${pv}.`;$("sOk").hidden=false;fillSect();renderSec();});
-      t3.append(bt);tr.append(t1,t2,t3);tb.append(tr);});
-  }
-  sProv.addEventListener("change",()=>{$("sErr").hidden=true;$("sOk").hidden=true;renderSec();});
-  $("sForm").addEventListener("submit",e=>{e.preventDefault();
-    const pv=sProv.value, nom=$("sNom").value.replace(/\s+/g," ").trim(), err=$("sErr"), ok=$("sOk"); ok.hidden=true;
-    if(nom.length<3){err.textContent="Escriba el nombre del sector (al menos 3 letras).";err.hidden=false;return;}
-    const ya=(SECT[pv]||[]).find(x=>norm(x)===norm(nom));
-    if(ya){err.textContent=`"${ya}" ya está en ${pv}.`;err.hidden=false;return;}
-    err.hidden=true; (SECT[pv]=SECT[pv]||[]).push(nom); $("sNom").value="";
-    ok.textContent=`Se agregó "${nom}" a ${pv}. Cuando conectemos la base de datos, aparecerá en el formulario de los encuestadores.`; ok.hidden=false; fillSect(); renderSec();});
+  // ===== Imprimir =====
+  function tabla(head,body,num){const t=document.createElement("table"),th=document.createElement("thead"),tr=document.createElement("tr");
+    head.forEach((h,i)=>{const c=document.createElement("th");c.textContent=h;if(i>=num)c.className="num";tr.append(c);});th.append(tr);
+    const tb=document.createElement("tbody");body.forEach(r=>row(tb,r.map(v=>v instanceof Node?v.textContent:v),num));t.append(th,tb);return t;}
+  function cabeza(titulo){const pa=$("printArea");pa.replaceChildren();const h=document.createElement("h1");h.textContent=titulo+" · Control Verificate PRM";
+    const m=document.createElement("p");m.className="note";m.textContent=`Fecha: ${new Date().toLocaleString("es-DO",{dateStyle:"long",timeStyle:"short"})} · Preparado por: ${$("adminName").textContent.replace("Administrador: ","")} · Filtros: ${filtrosTxt()}`;
+    const d=document.createElement("p");d.className="note";d.textContent="DATOS DE EJEMPLO: personas inventadas para mostrar el formato.";pa.append(h,m,d);return pa;}
+  const h2=t=>{const e=document.createElement("h2");e.textContent=t;return e;};
+  $("pRes").addEventListener("click",()=>{const rows=filtered(),T=rows.length,c=cuenta(rows),pa=cabeza("Reporte de totales");
+    pa.append(h2("1. Resumen"),tabla(["Resultado","Verificados","%"],[...RES.map((r,i)=>[RI[i]+" "+r,nf.format(c[i]),T?pf(c[i]/T):"—"]),["Total verificados",nf.format(T),T?"100%":"—"]],1));
+    const enc=ENC.map(e=>{const l=rows.filter(r=>r.enc===e);return [e,l.length,...cuenta(l)];}).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]);
+    pa.append(h2("2. Por encuestador"),tabla(["Encuestador","Verificados","Ya miembros","Ratificados","Nuevos","No completados"],[...enc.map(x=>x.map((v,i)=>i?nf.format(v):v)),["Total",nf.format(T),...c.map(v=>nf.format(v))]],1));
+    window.print();});
+  $("pList").addEventListener("click",()=>{const l=listaFiltrada(),pa=cabeza("Lista de personas");
+    const n=document.createElement("p");n.className="note";n.textContent=`${nf.format(l.length)} personas. Documento confidencial: contiene datos personales.`;pa.append(n);
+    pa.append(tabla(["Fecha","Nombre","Cédula","Teléfono","Resultado","Encuestador"],l.map(r=>[fFecha(r.fecha),r.nom,r.ced,r.tel,RI[RES.indexOf(r.res)]+" "+r.res+(r.nota?` (${r.nota})`:""),r.enc]),99));
+    window.print();});
+
   function renderReg(){
     const tb=$("tReg"); tb.replaceChildren();
     REGISTRO.forEach(r=>{
@@ -581,9 +378,8 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     if(REGISTRO.some(r=>r.ced===fmtCed(d))){err.textContent="Esa cédula ya está registrada.";err.hidden=false;return;}
     err.hidden=true; const r={nombre:nom,ced:fmtCed(d),estado:"Pendiente",codigo:newCode()}; REGISTRO.unshift(r);
     $("nNom").value=""; ced.value=""; showCode(r);});
-  $("clear").addEventListener("click",()=>{["fProv","fSexo","fEdad","fMiem","fEnc"].forEach(id=>$(id).value=""); fillSect(); $("fSect").value=""; openSect=null; sel=null; render();});
-  $("regen").addEventListener("click",()=>{DATA=generate(); sel=null; render(); renderReg(); renderSec();});
-  $("print").addEventListener("click",()=>{renderRep(); window.print();});
+  $("clear").addEventListener("click",()=>{["fPer","fEnc","fRes"].forEach(id=>$(id).value="");$("q").value="";render();});
+  $("regen").addEventListener("click",()=>{DATA=generate();lim=50;render();});
   const ADMINS={"00100000011":{nombre:"Antonio Hernández",pin:"905317",rol:"admin"},"40212345671":{nombre:"María Santos",pin:"731904",rol:"encuestador"}};
   const aCed=$("aCed"); aCed.addEventListener("input",()=>{const d=aCed.value.replace(/\D/g,"").slice(0,11);aCed.value=d.length>10?fmtCed(d):d.length>3?`${d.slice(0,3)}-${d.slice(3)}`:d;});
   $("lForm").addEventListener("submit",e=>{e.preventDefault(); const err=$("lErr"); const show=m=>{err.textContent=m;err.hidden=false;};
@@ -593,7 +389,7 @@ button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel
     err.hidden=true; $("adminName").textContent="Administrador: "+u.nombre; $("login").hidden=true; $("panel").hidden=false; $("aPin").value=""; window.scrollTo(0,0);});
   $("verPin").addEventListener("change",e=>{$("aPin").type=e.target.checked?"text":"password";});
   $("logout").addEventListener("click",()=>{$("panel").hidden=true; $("login").hidden=false;});
-  DATA=generate(); render(); renderReg(); renderSec();
+  DATA=generate(); render();
 })();
 </script>
 
