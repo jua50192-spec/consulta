@@ -291,6 +291,7 @@ button:disabled{opacity:.6}
   async function despuesDeEntrar() {
     try { yo = await miFicha(); } catch (e) { return err(sinRed); }
     if (!yo) { await sb.auth.signOut(); st.avisoT = "Esta cuenta no está registrada"; st.avisoP = "Pida al administrador que lo agregue como encuestador."; step = "aviso"; return true; }
+    if (yo.rol === "supervisor") { await sb.auth.signOut(); yo = null; st.avisoT = "Su cuenta es de supervisor"; st.avisoP = "Los supervisores no registran personas. Use el panel: la misma dirección terminada en /admin.html."; step = "aviso"; return true; }
     if (yo.estado === "bloqueado") { await sb.auth.signOut(); yo = null; st.avisoT = "Su acceso está bloqueado"; st.avisoP = "Hable con el administrador."; step = "aviso"; return true; }
     quien();
     step = yo.estado === "pendiente" ? "pin" : "datos"; return true;

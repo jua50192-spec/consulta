@@ -166,6 +166,7 @@ button:disabled{opacity:.6}
   </header>
 
   <p class="note" style="margin:0"><span id="estado"></span> <span id="padronInfo"></span></p>
+  <p class="note" id="modoSup" hidden style="margin:0;padding:8px 12px;border-radius:8px;background:var(--soft)"><b>Modo supervisor:</b> puede ver los números, pero no puede cambiar nada ni ver datos de las personas.</p>
 
   <div class="filters" aria-label="Filtros">
     <div class="f"><label for="fPer">Período</label><select id="fPer"><option value="">Todo</option><option value="0">Hoy</option><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option></select></div>
@@ -214,14 +215,15 @@ button:disabled{opacity:.6}
     <div class="card wide">
       <div class="priv"><div><h2>Imprimir / Guardar en PDF</h2><p>Los dos reportes usan los filtros de arriba. En la ventana de imprimir, elija <b>Guardar como PDF</b>.</p></div></div>
       <div class="btnrow"><button type="button" class="pri" id="pRes">Total</button><button type="button" id="pList">Lista de personas</button></div>
-      <p class="note">⚠️ La <b>lista de personas</b> tiene nombres, cédulas y teléfonos. Entréguela solo a quien esté autorizado y nunca la suba a GitHub ni a grupos de WhatsApp.</p>
+      <p class="note" id="avisoLista">⚠️ La <b>lista de personas</b> tiene nombres, cédulas y teléfonos. Entréguela solo a quien esté autorizado y nunca la suba a GitHub ni a grupos de WhatsApp.</p>
     </div>
     <div class="card wide" id="encCard">
-      <div><h2>Encuestadores: registro y acceso</h2><p class="note">Solo el administrador agrega encuestadores. Cada registro queda firmado con el nombre de quien lo hizo. Si alguien pierde el celular o deja el grupo, toque <b>Bloquear</b>. Si olvidó su PIN, toque <b>Nuevo código</b>.</p></div>
+      <div><h2>Encuestadores: registro y acceso</h2><p class="note">Solo el administrador agrega encuestadores y supervisores. El <b>supervisor</b> solo puede ver los números (totales, gráficos, por encuestador y el PDF de Total): no ve nombres, cédulas ni teléfonos, y no puede cambiar nada. Cada registro queda firmado con el nombre de quien lo hizo. Si alguien pierde el celular o deja el grupo, toque <b>Bloquear</b>. Si olvidó su PIN, toque <b>Nuevo código</b>.</p></div>
       <form class="addrow" id="addForm" novalidate>
         <div class="f"><label for="nNom">Nombre y apellido</label><input id="nNom" type="text" placeholder="Ej.: Pedro Gómez" autocomplete="off"></div>
         <div class="f"><label for="nCed">Cédula</label><input id="nCed" type="tel" inputmode="numeric" placeholder="000-0000000-0" autocomplete="off"></div>
-        <button type="submit" class="pri">Agregar encuestador</button>
+        <div class="f"><label for="nRol">Rol</label><select id="nRol"><option value="encuestador">Encuestador (registra personas)</option><option value="supervisor">Supervisor (solo ve números)</option></select></div>
+        <button type="submit" class="pri">Agregar</button>
       </form>
       <p class="errmsg" id="addErr" hidden></p>
       <div class="codebox" id="codeBox" hidden></div>
@@ -268,7 +270,7 @@ button:disabled{opacity:.6}
   }
   async function revisarEntrada() {
     yo = await miFicha();
-    if (!yo || yo.rol !== "admin") { await sb.auth.signOut(); lErr("Esta cédula no es de un administrador."); return; }
+    if (!yo || (yo.rol !== "admin" && yo.rol !== "supervisor")) { await sb.auth.signOut(); lErr("Esta cédula no es de un administrador ni de un supervisor."); return; }
     if (yo.estado === "bloqueado") { await sb.auth.signOut(); lErr("Este acceso está bloqueado."); return; }
     if (yo.estado === "pendiente") { $("pinNuevo").hidden = false; $("entrarBox").hidden = true; lErr(""); return; }
     entrarAlPanel();
@@ -295,7 +297,11 @@ button:disabled{opacity:.6}
   $("logout").addEventListener("click", async () => { try { await sb.auth.signOut(); } catch (e) {} location.reload(); });
   function entrarAlPanel() {
     $("login").hidden = true; $("panel").hidden = false;
-    $("adminName").textContent = "Administrador: " + yo.nombre;
+    const sup = yo.rol === "supervisor";
+    $("adminName").textContent = (sup ? "Supervisor: " : "Administrador: ") + yo.nombre;
+    // El supervisor solo ve números: se esconden la lista de personas, su PDF y la gestión de encuestadores
+    ["lista", "encCard", "pList", "avisoLista"].forEach(id => { $(id).hidden = sup; });
+    $("modoSup").hidden = !sup;
     cargar();
   }
 
@@ -303,6 +309,15 @@ button:disabled{opacity:.6}
   async function cargar() {
     $("estado").textContent = "Cargando datos…";
     try {
+      if (yo.rol === "supervisor") {
+        // Solo conteos (sin nombres, cédulas ni teléfonos de las personas)
+        const c = await sb.rpc("conteos"); if (c.error) throw c.error;
+        DATA = []; c.data.forEach(g => { const f = new Date(g.ultimo); for (let i = 0; i < g.n; i++) DATA.push({ id: 0, fecha: f, nom: "", ced: "", tel: "", res: g.resultado, nota: "", enc: g.encuestador }); });
+        ENCS = [];
+        const cur = $("fEnc").value; fill("fEnc", [...new Set(DATA.map(x => x.enc))].sort()); $("fEnc").value = [...$("fEnc").options].some(o => o.value === cur) ? cur : "";
+        render(); $("estado").textContent = `Actualizado: ${new Date().toLocaleTimeString("es-DO", { hour: "numeric", minute: "2-digit" })}`; $("padronInfo").textContent = "";
+        return;
+      }
       const e = await sb.from("encuestadores").select("id,nombre,cedula,rol,estado,creado").order("nombre");
       if (e.error) throw e.error; ENCS = e.data;
       const nom = Object.fromEntries(ENCS.map(x => [x.id, x.nombre]));
@@ -360,6 +375,7 @@ button:disabled{opacity:.6}
   }
   function listaFiltrada() { const q = $("q").value.trim().toLowerCase(), qd = q.replace(/\D/g, ""); return filtered().filter(r => !q || r.nom.toLowerCase().includes(q) || (qd.length >= 3 && (r.ced.replace(/\D/g, "").includes(qd) || r.tel.replace(/\D/g, "").includes(qd)))); }
   function renderList() {
+    if (yo && yo.rol === "supervisor") return;
     const l = listaFiltrada(), tb = $("tList"); tb.replaceChildren();
     l.slice(0, lim).forEach(r => {
       const tr = row(tb, [fFecha(r.fecha), r.nom, r.ced, r.tel, pill(r.res), r.enc, boton("Borrar", b => borrar(r, b), true)], 99); if (r.nota) tr.title = "Nota: " + r.nota; });
@@ -394,7 +410,7 @@ button:disabled{opacity:.6}
       if (e.estado === "bloqueado") acc.append(boton("Desbloquear", b => cambiarEstado(e, "activo", b)));
       else acc.append(boton("Bloquear", b => cambiarEstado(e, "bloqueado", b), true));
       acc.append(boton("Nuevo código", b => nuevoCodigo(e, b)));
-      row(tb, [e.nombre + (e.rol === "admin" ? " (administrador)" : ""), fmtCed(e.cedula), s, nf.format(n), acc], 3);
+      row(tb, [e.nombre + (e.rol === "admin" ? " (administrador)" : e.rol === "supervisor" ? " (supervisor)" : ""), fmtCed(e.cedula), s, e.rol === "supervisor" ? "—" : nf.format(n), acc], 3);
     });
     if (!tb.children.length) row(tb, ["Todavía no hay encuestadores. Agregue el primero arriba."], 9);
   }
@@ -415,7 +431,8 @@ button:disabled{opacity:.6}
     const fallo = m => { er.textContent = m; er.hidden = false; };
     if (nom.split(" ").length < 2) return fallo("Escriba nombre y apellido.");
     if (d.length !== 11) return fallo("La cédula debe tener 11 números.");
-    const { data, error } = await sb.rpc("crear_encuestador", { p_nombre: nom, p_cedula: d });
+    const rol = $("nRol").value;
+    const { data, error } = await sb.rpc("crear_encuestador", { p_nombre: nom, p_cedula: d, p_rol: rol });
     if (error) return fallo(/ya_existe/.test(error.message) ? "Esa cédula ya tiene cuenta." : /fetch|network/i.test(error.message) ? sinRed : "No se pudo agregar. Revise los datos.");
     $("nNom").value = ""; $("nCed").value = ""; mostrarCodigo(nom, data); await cargar();
   });
