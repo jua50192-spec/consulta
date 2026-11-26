@@ -8,437 +8,343 @@
 <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0}body{-webkit-text-size-adjust:100%}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
-<title>Panel Control Verificate</title>
+<title>Control Verificate PRM</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Public+Sans:wght@400;500;600&display=swap">
 <style>
 [hidden]{display:none!important}
-/* Layout: barra de filtros fija arriba, cifras clave, luego rejilla de tarjetas de 2 columnas que se apila en el celular */
+/* Layout: un celular centrado con el formulario por pasos; barra de progreso arriba y botones abajo */
 :root{
-  --bg:#f3f4f7; --panel:#ffffff; --ink:#18202e; --muted:#5d6678; --line:#dfe2ea; --soft:#eceef3;
-  --accent:#1f4fa3; --warn-bg:#fff4d6; --warn-ink:#7a5200; --warn-line:#e8c66a;
-  --c1:#1f4fa3; --c2:#0f8a7a; --c3:#b4552d; --c4:#7a4fb0; --c5:#b8336a; --c0:#9aa1ae;
-  --g1:#1d7a46; --g2:#7fbf6a; --g3:#e0b44a; --g4:#c8503c; --g5:#c3c8d2;
-  --display:"Archivo", "Helvetica Neue", Arial, sans-serif;
-  --body:"Public Sans", "Segoe UI", Arial, sans-serif;
-  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --bg:#e9ecf2; --phone:#ffffff; --ink:#18202e; --muted:#5d6678; --line:#dfe2ea; --soft:#f1f3f7;
+  --accent:#1f4fa3; --accent-ink:#ffffff; --warn-bg:#fff4d6; --warn-ink:#7a5200; --ok:#1d7a46; --bad:#b3261e;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif; --body:"Public Sans","Segoe UI",Arial,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#10141c; --panel:#171d28; --ink:#e7eaf1; --muted:#9aa3b5; --line:#2a3242; --soft:#212938;
-  --accent:#7aa5f0; --warn-bg:#3a2f12; --warn-ink:#f2d07a; --warn-line:#6b5521;
-  --c1:#6f9cf0; --c2:#3fc2ae; --c3:#e58a5f; --c4:#b08ae6; --c5:#ec7aa5; --c0:#6c7484;
-  --g1:#3fb172; --g2:#93d27d; --g3:#e6c25e; --g4:#e3735e; --g5:#4a5263; color-scheme:dark}}
+  --bg:#0d1118; --phone:#171d28; --ink:#e7eaf1; --muted:#9aa3b5; --line:#2a3242; --soft:#212938;
+  --accent:#7aa5f0; --accent-ink:#0d1118; --warn-bg:#3a2f12; --warn-ink:#f2d07a; --ok:#3fb172; --bad:#f08077; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#10141c; --panel:#171d28; --ink:#e7eaf1; --muted:#9aa3b5; --line:#2a3242; --soft:#212938;
-  --accent:#7aa5f0; --warn-bg:#3a2f12; --warn-ink:#f2d07a; --warn-line:#6b5521;
-  --c1:#6f9cf0; --c2:#3fc2ae; --c3:#e58a5f; --c4:#b08ae6; --c5:#ec7aa5; --c0:#6c7484;
-  --g1:#3fb172; --g2:#93d27d; --g3:#e6c25e; --g4:#e3735e; --g5:#4a5263; color-scheme:dark}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45}
-.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px;display:grid;gap:16px}
-h1{font-family:var(--display);font-weight:800;font-size:clamp(20px,3.2vw,28px);margin:0;letter-spacing:-.01em;text-wrap:balance}
-h2{font-family:var(--display);font-weight:700;font-size:16px;margin:0}
-.sub{color:var(--muted);margin:2px 0 0}
-.note{color:var(--muted);font-size:12.5px;margin:2px 0 0}
-.demo{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;background:var(--warn-bg);color:var(--warn-ink);border:1px solid var(--warn-line);border-radius:10px;padding:10px 14px}
-.demo b{font-family:var(--display);letter-spacing:.06em;text-transform:uppercase;font-size:12.5px}
-.demo p{margin:0;flex:1 1 280px}
-button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 12px;font-weight:600}
-button:hover{border-color:var(--accent)}
-button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.btn-demo{border-color:var(--warn-line);background:transparent;color:var(--warn-ink)}
-.filters{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:end;border-bottom:1px solid var(--line)}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-.f{display:grid;gap:3px;flex:1 1 130px;min-width:0}
-.f label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
-select{font:inherit;padding:7px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);width:100%}
-.active{font-size:12.5px;color:var(--accent);flex-basis:100%}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:2px;align-content:start}
-.kpi .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.kpi .v{font-family:var(--display);font-weight:800;font-size:28px;font-variant-numeric:tabular-nums;line-height:1.1}
-.kpi .s{font-size:12.5px;color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:14px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:10px;align-content:start;min-width:0}
-.card.wide{grid-column:1/-1}
-.bars{display:grid;gap:9px}
-.bar{display:grid;grid-template-columns:minmax(110px,150px) 1fr 132px;gap:10px;align-items:center;cursor:pointer;border-radius:6px;padding:2px 4px;margin:0 -4px}
-.bar:hover{background:var(--soft)}
-.bar.sel{background:var(--soft);outline:1px solid var(--accent)}
-.bar .n{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.track{height:18px;background:var(--soft);border-radius:4px;overflow:hidden;display:flex}
-.fill{height:100%;transition:width .45s ease}
-.bar .p{font-family:var(--mono);font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
-.lead{font-size:11px;font-weight:700;color:var(--accent);margin-left:6px;letter-spacing:.04em}
-.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted)}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
-.days{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;align-items:end;height:150px;border-bottom:1px solid var(--line)}
-.day{background:var(--accent);border-radius:3px 3px 0 0;min-height:2px;position:relative;transition:height .45s ease}
-.day:hover{opacity:.8}
-.dlab{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;font-size:10.5px;color:var(--muted);text-align:center;font-family:var(--mono)}
-.tw{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}
-th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
-tr.clk{cursor:pointer} tr.clk:hover td{background:var(--soft)} tr.sub td{color:var(--muted);font-size:12.5px;background:var(--soft)}
-td{padding:7px 8px;border-bottom:1px solid var(--soft);white-space:nowrap}
-td.num,th.num{text-align:right;font-family:var(--mono)}
-.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:600}
-.ok{background:color-mix(in srgb,var(--g1) 18%,transparent);color:var(--g1)}
-.bad{background:color-mix(in srgb,var(--g4) 18%,transparent);color:var(--g4)}
-.tip{position:fixed;pointer-events:none;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:12.5px;box-shadow:0 6px 18px rgba(0,0,0,.15);z-index:20}
-.addrow{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
-.addrow input{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);width:100%}
-button.pri{background:var(--accent);border-color:var(--accent);color:var(--panel)}
-.errmsg{margin:0;color:var(--g4);font-weight:600;font-size:13px}
-.codebox{border:1px dashed var(--accent);border-radius:10px;padding:12px 14px;display:grid;gap:4px}
-.codebox .code{font-family:var(--mono);font-size:26px;letter-spacing:.2em;color:var(--accent)}
-.act{display:flex;gap:6px;flex-wrap:wrap}.act button{padding:4px 9px;font-size:12px}
-.pend{background:color-mix(in srgb,var(--g3) 25%,transparent);color:var(--ink)}
-.login{min-height:100%;display:grid;place-items:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:48px}
-.lcard{width:100%;max-width:400px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;display:grid;gap:14px;box-shadow:0 14px 34px rgba(10,20,40,.12)}
-.lcard .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.lcard input{font:inherit;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink);width:100%}
-.lcard button{padding:11px}
-.lhint{background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5}
-.hdr{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:start;gap:10px}
-.who{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
-.priv{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
-.priv p{margin:0;color:var(--muted);flex:1 1 300px}
-.bar .p b{font-weight:600;color:var(--ink)} .bar .p span{color:var(--muted)}
-@media (max-width:520px){.bar{grid-template-columns:92px 1fr 104px}.kpi .v{font-size:24px}}
-.rephead{display:none}
-.repday th,.repday td{font-size:12px;padding:6px 6px}
-.repday th{white-space:normal;line-height:1.2}
-.rep tfoot td{font-weight:700;border-top:1px solid var(--line)}
-.rbar{display:flex;height:26px;border-radius:6px;overflow:hidden;background:var(--soft)}
-.rbar i{display:block;height:100%}
-.r1{background:var(--g1)} .r2{background:var(--c2)} .r3{background:var(--c1)} .r4{background:var(--g3)}
-.leg3{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px}
-.leg3 span{display:flex;align-items:center;gap:6px}.leg3 i{width:11px;height:11px;border-radius:3px;display:inline-block}
-.p1{background:color-mix(in srgb,var(--g1) 18%,transparent);color:var(--g1)}
-.p2{background:color-mix(in srgb,var(--c1) 16%,transparent);color:var(--c1)}
-.p3{background:color-mix(in srgb,var(--g3) 30%,transparent);color:var(--ink)}
-.p4{background:color-mix(in srgb,var(--c2) 18%,transparent);color:var(--c2)}
-.search{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);width:100%;max-width:360px}
-.day{display:flex;flex-direction:column-reverse;background:transparent}
-.day i{display:block;width:100%}
-.btnrow{display:flex;flex-wrap:wrap;gap:8px}
-#printArea{display:none}
-@media print{
-  @page{size:letter;margin:13mm}
-  #login,#panel,#tip{display:none!important}
-  #printArea{display:block!important;color:#000;font-family:var(--body);font-size:11.5px}
-  #printArea h1{font-size:18px} #printArea h2{font-size:14px;margin:14px 0 4px}
-  #printArea table{font-size:11px} #printArea td,#printArea th{color:#000;border-color:#aaa;padding:4px 6px;white-space:normal}
-  #printArea tr{break-inside:avoid} #printArea .note{color:#333}
-  #printArea td:nth-child(1),#printArea td:nth-child(3),#printArea td:nth-child(4){white-space:nowrap}
-}
-@media (prefers-reduced-motion:reduce){.fill,.day{transition:none}}
+  --bg:#0d1118; --phone:#171d28; --ink:#e7eaf1; --muted:#9aa3b5; --line:#2a3242; --soft:#212938;
+  --accent:#7aa5f0; --accent-ink:#0d1118; --warn-bg:#3a2f12; --warn-ink:#f2d07a; --ok:#3fb172; --bad:#f08077; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+.page{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 32px;display:grid;justify-items:center;gap:12px}
+.demo{max-width:420px;width:100%;background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:8px 12px;font-size:13px}
+.phone{width:100%;max-width:400px;background:var(--phone);border:1px solid var(--line);border-radius:28px;box-shadow:0 18px 40px rgba(10,20,40,.18);overflow:hidden;display:grid;grid-template-rows:auto auto 1fr auto;min-height:680px}
+.top{background:var(--accent);color:var(--accent-ink);padding:14px 18px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.top b{font-family:var(--display);font-weight:800;letter-spacing:.01em}
+.top span{font-size:12px;opacity:.9}
+.prog{height:5px;background:var(--soft)} .prog i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.body{padding:18px;display:grid;gap:14px;align-content:start}
+h2{font-family:var(--display);font-weight:800;font-size:20px;margin:0;text-wrap:balance}
+.step{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.q{display:grid;gap:7px}
+.q > label,.ql{font-weight:600}
+input[type=text],input[type=password],input[type=tel],select{font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--phone);color:var(--ink);width:100%}
+.opts{display:grid;gap:7px}
+.opts.row{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.opts.two{grid-template-columns:1fr 1fr}
+.opt{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;cursor:pointer;font-weight:500}
+.opt:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.opt input{accent-color:var(--accent);width:18px;height:18px;margin:0}
+.read{background:var(--soft);border-radius:10px;padding:12px;font-style:italic}
+.small{font-size:12.5px;color:var(--muted)}
+.gps{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ok)}
+.gps::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.grid5{display:grid;gap:10px}
+.cand{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:7px}
+.cand b{font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.chip span{display:block;padding:6px 10px;border:1px solid var(--line);border-radius:999px;font-size:13px}
+.chip input:checked + span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+.photo{border:2px dashed var(--line);border-radius:12px;min-height:150px;display:grid;place-items:center;text-align:center;padding:12px;color:var(--muted);cursor:pointer;overflow:hidden}
+.photo img{width:100%;max-width:340px;aspect-ratio:85.6/53.98;object-fit:cover;border-radius:8px}
+.photo-btns{display:flex;gap:8px;flex-wrap:wrap}
+.photo-btns button{flex:1 1 140px;padding:11px 12px;border-radius:10px}
+.photo-btns button.cam{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.size{font-size:12.5px;color:var(--ok);font-weight:600}
+.verif{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:#fff;border:2px solid #1f4fa3;color:#1f2a44;text-decoration:none}
+.verif img{width:46px;height:auto;flex:none}
+.verif b{display:block;font-size:16px;color:#1f4fa3}
+.verif span{font-size:13px;color:#4a5568}
+.link{display:block;text-align:center;padding:11px;border-radius:10px;border:1px solid var(--accent);color:var(--accent);font-weight:600;text-decoration:none}
+@media (max-width:520px){.page{padding:0;gap:0}.demo{border-radius:0;max-width:none}
+  .phone{max-width:none;border:0;border-radius:0;box-shadow:none;min-height:100vh;min-height:100dvh}
+  .top{padding-top:calc(14px + env(safe-area-inset-top,0px))}.nav{padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}}
+.err{color:var(--bad);font-size:13px;font-weight:600}
+.lo{border:1px solid rgba(255,255,255,.45);background:transparent;color:inherit;font-size:12px;padding:4px 9px;border-radius:8px;margin-left:8px}
+.recordar{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.35}
+.recordar input{width:20px;height:20px;margin-top:1px;flex:none}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:12px;padding:4px;gap:4px}
+.tabs button{border:0;background:transparent;padding:9px;border-radius:9px;font-weight:600;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--phone);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.cam-ov{position:fixed;inset:0;z-index:50;background:#000;color:#fff;display:grid;grid-template-rows:auto 1fr auto auto;gap:10px;
+  padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.cam-t{font-family:var(--display);font-weight:800;font-size:18px;text-align:center}
+.cam-box{position:relative;min-height:0;display:grid;place-items:center;overflow:hidden;border-radius:14px}
+.cam-box video{width:100%;height:100%;object-fit:contain;background:#000}
+.cam-dim{position:absolute;left:50%;top:-30px;transform:translateX(-50%);white-space:nowrap;font-size:12.5px;font-weight:600;background:rgba(0,0,0,.55);padding:3px 10px;border-radius:999px}
+.cam-guide{position:absolute;width:86%;max-width:520px;aspect-ratio:85.6/53.98;border:3px solid rgba(255,255,255,.9);border-radius:12px;box-shadow:0 0 0 2000px rgba(0,0,0,.35);pointer-events:none}
+.cam-h{margin:0;text-align:center;font-size:14px;opacity:.9}
+.cam-b{display:flex;gap:10px}.cam-b button{flex:1;padding:14px}.cam-b .cx{background:#222;color:#fff;border-color:#444}
+.hint{background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5}
+.nav{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--line)}
+button{font:inherit;font-weight:600;border-radius:12px;padding:13px 14px;cursor:pointer;border:1px solid var(--line);background:var(--phone);color:var(--ink);flex:1}
+.salir{position:fixed;inset:0;z-index:50;background:rgba(10,14,24,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.salir .box{background:var(--phone);color:var(--ink);border-radius:16px;padding:22px 20px;max-width:340px;width:100%;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.salir h3{margin:0 0 8px;font-size:19px}
+.salir p{margin:0 0 18px;color:var(--muted);font-size:15px;line-height:1.45}
+.salir .acc{display:flex;gap:10px}
+.salir .acc button{flex:1;padding:13px 10px;font-size:16px}
+button.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);flex:2}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.done{display:grid;justify-items:center;text-align:center;gap:10px;padding-top:40px}
+.done .ck{width:72px;height:72px;border-radius:50%;background:color-mix(in srgb,var(--ok) 15%,transparent);display:grid;place-items:center}
+.done .ck svg{width:38px;height:38px}
+.counter{font-family:var(--display);font-size:34px;font-weight:800}
+.pad{border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.4;border:1px solid var(--line)}
+.pad.av{background:#fff4d6;border-color:#e0b64a;color:#5a4300}
+.pad.ok{background:#e4f5ea;border-color:#7cc497;color:#16502c}
+.pad.in{background:var(--soft,#f1f3f7);color:var(--ink)}
+@media (prefers-color-scheme:dark){.pad.av{background:#3a2f10;color:#f5dc9a}.pad.ok{background:#12301f;color:#a6e3bb}}
 button:disabled{opacity:.6}
-.p4{background:color-mix(in srgb,var(--c2) 18%,transparent);color:var(--c2)}
 </style>
-
-<div class="login" id="login">
-  <form class="lcard" id="lForm" novalidate>
-    <span class="k">Control Verificate · PRM</span>
-    <h1>Entrada del administrador</h1>
-    <div class="f"><label for="aCed">Número de cédula</label><input id="aCed" type="tel" inputmode="numeric" placeholder="000-0000000-0" autocomplete="off"></div>
-    <div id="entrarBox" style="display:grid;gap:12px">
-      <div class="f"><label for="aPin">PIN o código de activación</label><input id="aPin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></div>
-    </div>
-    <div id="pinNuevo" hidden style="display:grid;gap:12px">
-      <p class="note"><b>Primera vez:</b> cree su PIN de 6 números. Con él entrará de ahora en adelante.</p>
-      <div class="f"><label for="nPin1">Nuevo PIN</label><input id="nPin1" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
-      <div class="f"><label for="nPin2">Repita el PIN</label><input id="nPin2" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
-    </div>
-    <label style="display:flex;gap:8px;align-items:center;font-size:14px;margin:-4px 0 4px"><input type="checkbox" id="verPin" style="width:auto"> Ver el PIN que escribí</label>
-    <p class="errmsg" id="lErr" hidden></p>
-    <button type="submit" class="pri" id="lBtn">Entrar</button>
-    <p class="note">El administrador escribe su PIN cada vez que abre el panel, porque ve todos los datos.</p>
+<div class="page">
+  <form class="phone" id="app" novalidate>
+    <div class="top"><b>Control Verificate</b><span><span id="who">Sin sesión</span><button type="button" class="lo" id="logout" hidden>Cerrar sesión</button></span></div>
+    <div class="prog"><i id="bar" style="width:0%"></i></div>
+    <div class="body" id="screen"></div>
+    <div class="nav"><button type="button" id="back" hidden>Atrás</button><button type="button" class="pri" id="next">Entrar</button></div>
   </form>
 </div>
-
-<div class="wrap" id="panel" hidden>
-  <header class="hdr">
-    <div><h1>Control Verificate · PRM</h1>
-    <p class="sub">Panel del administrador: cuántas personas se han verificado, cómo quedó cada una, quién la registró y cuándo.</p></div>
-    <div class="who"><span id="adminName"></span><button type="button" id="recargar">Actualizar</button><button type="button" id="logout">Cerrar sesión</button></div>
-  </header>
-
-  <p class="note" style="margin:0"><span id="estado"></span> <span id="padronInfo"></span></p>
-
-  <div class="filters" aria-label="Filtros">
-    <div class="f"><label for="fPer">Período</label><select id="fPer"><option value="">Todo</option><option value="0">Hoy</option><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option></select></div>
-    <div class="f"><label for="fEnc">Encuestador</label><select id="fEnc"></select></div>
-    <div class="f"><label for="fRes">Resultado</label><select id="fRes"></select></div>
-    <button id="clear" type="button">Limpiar filtros</button>
+<div class="salir" id="salir" hidden role="dialog" aria-modal="true" aria-labelledby="salirT">
+  <div class="box">
+    <h3 id="salirT">¿Desea salir de la aplicación?</h3>
+    <p id="salirP"></p>
+    <div class="acc"><button type="button" class="pri" id="salirNo">Quedarme</button><button type="button" id="salirSi">Salir</button></div>
   </div>
-
-  <section class="kpis" aria-label="Cifras clave">
-    <div class="kpi" style="border-color:var(--accent)"><span class="k">Verificados (total)</span><span class="v" id="kTot">0</span><span class="s" id="kTotS"></span></div>
-    <div class="kpi"><span class="k">✅ Ya eran miembros</span><span class="v" id="k1">0</span><span class="s" id="k1s"></span></div>
-    <div class="kpi"><span class="k">🔄 Confirmados</span><span class="v" id="k2">0</span><span class="s" id="k2s"></span></div>
-    <div class="kpi"><span class="k">🆕 Nuevos inscritos</span><span class="v" id="k3">0</span><span class="s" id="k3s"></span></div>
-    <div class="kpi"><span class="k">⚠️ No se pudo completar</span><span class="v" id="k4">0</span><span class="s" id="k4s"></span></div>
-    <div class="kpi"><span class="k">Hoy</span><span class="v" id="kHoy">0</span><span class="s">verificados hoy</span></div>
-  </section>
-
-  <section class="grid">
-    <div class="card">
-      <div><h2>Resultado en Verificate</h2><p class="note">Cómo quedaron las personas verificadas.</p></div>
-      <div class="rbar" id="rbar"></div>
-      <div class="leg3" id="leg3"></div>
-    </div>
-    <div class="card">
-      <div><h2>Avance por día</h2><p class="note">Personas verificadas en los últimos 14 días. Pase el dedo o el mouse sobre una barra para ver el detalle.</p></div>
-      <div class="days" id="chDays"></div>
-      <div class="dlab" id="chDaysL"></div>
-    </div>
-    <div class="card wide">
-      <div><h2>Por encuestador</h2><p class="note">Toque un encuestador para ver solo sus registros. Cada encuestador ve su total de verificados en su celular. Si alguien tiene muchos "No se pudo completar", conviene preguntarle qué está pasando.</p></div>
-      <div class="tw"><table>
-        <thead><tr><th>Encuestador</th><th class="num">Verificados</th><th class="num">Ya miembros</th><th class="num">Confirmados</th><th class="num">Nuevos</th><th class="num">No completados</th><th>Último registro</th></tr></thead>
-        <tbody id="tEnc"></tbody>
-      </table></div>
-    </div>
-    <div class="card wide" id="lista">
-      <div class="priv"><div><h2>Lista de personas</h2><p>Solo la ve el administrador. Respeta los filtros de arriba. Use <b>Borrar</b> solo si la persona pidió que la saquen o si fue un error.</p></div>
-        <input class="search" id="q" type="search" placeholder="Buscar por nombre, cédula o teléfono" autocomplete="off"></div>
-      <p class="note" id="qInfo"></p>
-      <div class="tw"><table>
-        <thead><tr><th>Fecha</th><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Resultado</th><th>Encuestador</th><th>Acción</th></tr></thead>
-        <tbody id="tList"></tbody>
-      </table></div>
-      <button type="button" id="mas" hidden>Mostrar más</button>
-    </div>
-    <div class="card wide">
-      <div class="priv"><div><h2>Imprimir / Guardar en PDF</h2><p>Los dos reportes usan los filtros de arriba. En la ventana de imprimir, elija <b>Guardar como PDF</b>.</p></div></div>
-      <div class="btnrow"><button type="button" class="pri" id="pRes">Total</button><button type="button" id="pList">Lista de personas</button></div>
-      <p class="note">⚠️ La <b>lista de personas</b> tiene nombres, cédulas y teléfonos. Entréguela solo a quien esté autorizado y nunca la suba a GitHub ni a grupos de WhatsApp.</p>
-    </div>
-    <div class="card wide" id="encCard">
-      <div><h2>Encuestadores: registro y acceso</h2><p class="note">Solo el administrador agrega encuestadores. Cada registro queda firmado con el nombre de quien lo hizo. Si alguien pierde el celular o deja el grupo, toque <b>Bloquear</b>. Si olvidó su PIN, toque <b>Nuevo código</b>.</p></div>
-      <form class="addrow" id="addForm" novalidate>
-        <div class="f"><label for="nNom">Nombre y apellido</label><input id="nNom" type="text" placeholder="Ej.: Pedro Gómez" autocomplete="off"></div>
-        <div class="f"><label for="nCed">Cédula</label><input id="nCed" type="tel" inputmode="numeric" placeholder="000-0000000-0" autocomplete="off"></div>
-        <button type="submit" class="pri">Agregar encuestador</button>
-      </form>
-      <p class="errmsg" id="addErr" hidden></p>
-      <div class="codebox" id="codeBox" hidden></div>
-      <div class="tw"><table>
-        <thead><tr><th>Nombre</th><th>Cédula</th><th>Estado</th><th class="num">Registros</th><th>Acciones</th></tr></thead>
-        <tbody id="tReg"></tbody>
-      </table></div>
-    </div>
-  </section>
 </div>
-<div class="tip" id="tip" hidden></div>
-<div id="printArea"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
 <script>
 (() => {
-  // ===== Conexión con Supabase (llave PÚBLICA) =====
+  // ===== Conexión con Supabase (llave PÚBLICA: está hecha para ir en la página) =====
   const SB_URL = "https://mwegrgsuuyggvvgdqqiv.supabase.co";
   const SB_KEY = "sb_publishable_OBbZi8I8pnyhbyu5v6UOFA_QqV0GBbm";
+  const REC = "cv_recordar", DIAS = 30;
   const correo = ced => `c${ced}@control-verificate.example`;
-  // El administrador NO se recuerda: la sesión dura solo mientras la pestaña esté abierta
-  const sb = (window.__crearCliente || window.supabase.createClient)(SB_URL, SB_KEY,
-    { auth: { storage: window.sessionStorage, storageKey: "cv-admin", persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
+  const almacen = () => { try { return localStorage.getItem(REC) ? localStorage : sessionStorage; } catch (e) { return undefined; } };
+  const crearCliente = () => (window.__crearCliente || window.supabase.createClient)(SB_URL, SB_KEY,
+    { auth: { storage: almacen(), storageKey: "cv-sesion", persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
+  let sb = crearCliente();
 
-  const RES = ["Ya era miembro", "Confirmado", "Nuevo inscrito", "No se pudo completar"], RI = ["✅", "🔄", "🆕", "⚠️"], RC = ["p1", "p4", "p2", "p3"];
-  const nf = new Intl.NumberFormat("es-DO");
-  const pf = x => (x * 100).toLocaleString("es-DO", { maximumFractionDigits: 1, minimumFractionDigits: 1 }) + "%";
+  const RES = [
+    { v: "Ya era miembro", i: "✅", d: "Verificate dice: “Ya formas parte del padrón verificado del PRM”." },
+    { v: "Confirmado", i: "🔄", d: "Estaba a confirmar y ya fue confirmado." },
+    { v: "Nuevo inscrito", i: "🆕", d: "Verificate le preguntó si desea formar parte del PRM, dijo que sí e hizo completa la prueba de vida." },
+    { v: "No se pudo completar", i: "⚠️", d: "Empezó pero no terminó: la página no cargó, falló la prueba de vida u otro motivo." }];
+  const PADRON = {
+    "A CONFIRMAR": ["av", "Padrón: <b>A CONFIRMAR</b>. Hay que confirmarla en Verificate (prueba de vida)."],
+    "RATIFICADO": ["ok", "Padrón: <b>RATIFICADO</b>. Ya es miembro. Verificate debería decir “Ya formas parte del padrón verificado”."],
+    "CONFIRMADO": ["ok", "Padrón: <b>CONFIRMADO</b>. Ya es miembro. Verificate debería decir “Ya formas parte del padrón verificado”."],
+    "NUEVA INSCRIPCION": ["ok", "Padrón: <b>NUEVA INSCRIPCIÓN</b>. Ya se inscribió antes."],
+    "EN PADRON": ["in", "Está en el padrón del Distrito Nacional. Revise en Verificate cómo está."],
+    "NO ESTA": ["in", "No aparece en el padrón del Distrito Nacional (puede ser de otra provincia o una persona nueva). Verificate le dirá."],
+    "limite": ["in", "Llegó al límite de búsquedas por hora. Siga con Verificate."],
+    "error": ["in", "No se pudo revisar el padrón ahora. Siga con Verificate."]};
+
+  let step = 0, st = {}, yo = null, ocupado = false;
   const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const fmtCed = d => d.length > 10 ? `${d.slice(0,3)}-${d.slice(3,10)}-${d.slice(10)}` : d.length > 3 ? `${d.slice(0,3)}-${d.slice(3)}` : d;
-  const fmtTel = d => `${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}`;
-  const fFecha = d => d.toLocaleDateString("es-DO", { day: "numeric", month: "short" }) + " " + d.toLocaleTimeString("es-DO", { hour: "numeric", minute: "2-digit" });
+  const fmtTel = d => d.length > 6 ? `${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}` : d.length > 3 ? `${d.slice(0,3)}-${d.slice(3)}` : d;
+  const cedOk = d => { if (!/^\d{11}$/.test(d)) return false; let s = 0; for (let i = 0; i < 10; i++) { let n = +d[i] * (i % 2 ? 2 : 1); s += n > 9 ? n - 9 : n; } return (10 - s % 10) % 10 === +d[10]; };
   const debil = p => /^(\d)\1{5}$/.test(p) || "0123456789".includes(p) || "9876543210".includes(p) || ["123123","112233","121212"].includes(p);
+  const mask = (el, f, max) => el.addEventListener("input", () => { el.value = f(el.value.replace(/\D/g, "").slice(0, max)); });
   const sinRed = "No hay conexión con el servidor. Revise su internet e intente otra vez.";
-  let DATA = [], ENCS = [], yo = null, lim = 50;
-  const hoyIni = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+  const err = (m) => { const e = $("e"); if (e) { e.innerHTML = m; e.hidden = false; } return false; };
+  const quien = () => { $("who").textContent = yo ? yo.nombre : "Sin sesión"; };
+  const fFecha = s => new Date(s).toLocaleTimeString("es-DO", { hour: "numeric", minute: "2-digit" });
 
-  // ===== Entrada =====
-  ["aCed"].forEach(id => $(id).addEventListener("input", e => { e.target.value = fmtCed(e.target.value.replace(/\D/g, "").slice(0, 11)); }));
-  $("verPin").addEventListener("change", e => { ["aPin", "nPin1", "nPin2"].forEach(id => { if ($(id)) $(id).type = e.target.checked ? "text" : "password"; }); });
-  const lErr = m => { $("lErr").textContent = m; $("lErr").hidden = !m; };
   async function miFicha() {
-    const { data: u } = await sb.auth.getUser(); if (!u || !u.user) return null;
+    const { data: u } = await sb.auth.getUser();
+    if (!u || !u.user) return null;
     const { data, error } = await sb.from("encuestadores").select("id,nombre,rol,estado").eq("id", u.user.id).maybeSingle();
-    if (error) throw error; return data;
+    if (error) throw error;
+    return data;
   }
-  async function revisarEntrada() {
-    yo = await miFicha();
-    if (!yo || yo.rol !== "admin") { await sb.auth.signOut(); lErr("Esta cédula no es de un administrador."); return; }
-    if (yo.estado === "bloqueado") { await sb.auth.signOut(); lErr("Este acceso está bloqueado."); return; }
-    if (yo.estado === "pendiente") { $("pinNuevo").hidden = false; $("entrarBox").hidden = true; lErr(""); return; }
-    entrarAlPanel();
+
+  // ===== Pantallas =====
+  const S = {
+    entrar: { btn: "Entrar", html: () => `
+      <div class="step">Acceso del encuestador</div><h2>Entre con su cédula</h2>
+      <div class="q"><label for="u">Cédula</label><input type="tel" id="u" inputmode="numeric" placeholder="000-0000000-0" autocomplete="username"></div>
+      <div class="q"><label for="p">PIN o código de activación</label><input type="password" id="p" inputmode="numeric" maxlength="6" placeholder="6 números" autocomplete="current-password"></div>
+      <p class="small">¿Primera vez? Use el <b>código de 6 números</b> que le dio el administrador. Después creará su propio PIN.</p>
+      <label class="recordar"><input type="checkbox" id="rec" checked><span><b>Recordar este celular por 30 días.</b> Desmárquelo si el celular no es suyo.</span></label>
+      <p class="err" id="e" hidden></p>`,
+      after: () => { mask($("u"), fmtCed, 11); },
+      go: async () => {
+        const d = $("u").value.replace(/\D/g, ""), p = $("p").value.replace(/\D/g, "");
+        if (d.length !== 11 || p.length !== 6) return err("Escriba su cédula (11 números) y su PIN o código (6 números).");
+        try { if ($("rec").checked) localStorage.setItem(REC, String(Date.now())); else localStorage.removeItem(REC); } catch (e) {}
+        sb = crearCliente();
+        const { error } = await sb.auth.signInWithPassword({ email: correo(d), password: p });
+        if (error) return err(/fetch|network/i.test(error.message) ? sinRed : "Cédula o PIN incorrectos.");
+        return await despuesDeEntrar();
+      }},
+    pin: { btn: "Guardar mi PIN", html: () => `
+      <div class="step">Primera vez</div><h2>Cree su PIN</h2>
+      <p class="small">Hola, <b>${esc(yo.nombre)}</b>. Cree un PIN de 6 números. Con él entrará de ahora en adelante. No se lo diga a nadie.</p>
+      <div class="q"><label for="p1">Nuevo PIN</label><input type="password" id="p1" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
+      <div class="q"><label for="p2">Repita el PIN</label><input type="password" id="p2" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
+      <p class="err" id="e" hidden></p>`,
+      go: async () => {
+        const a = $("p1").value.replace(/\D/g, ""), b = $("p2").value.replace(/\D/g, "");
+        if (a.length !== 6) return err("El PIN debe tener 6 números.");
+        if (a !== b) return err("Los dos PIN no son iguales.");
+        if (debil(a)) return err("Ese PIN es muy fácil de adivinar. Use otro.");
+        const r1 = await sb.auth.updateUser({ password: a });
+        if (r1.error) return err(/fetch|network/i.test(r1.error.message) ? sinRed : "No se pudo guardar el PIN. Pruebe con otro.");
+        const r2 = await sb.rpc("activar_mi_cuenta");
+        if (r2.error) return err(sinRed);
+        yo = await miFicha(); quien();
+        step = "datos"; return true;
+      }},
+    datos: { btn: "Continuar", html: () => `
+      <div class="step">Paso 1 de 2</div><h2>Datos de la persona</h2>
+      <div class="q"><label for="nom">Nombre y apellido</label><input type="text" id="nom" autocomplete="off" value="${esc(st.nom)}"></div>
+      <div class="q"><label for="ced">Cédula</label><input type="tel" id="ced" inputmode="numeric" placeholder="000-0000000-0" autocomplete="off" value="${esc(st.cedP)}"></div>
+      <div class="q"><label for="tel">Teléfono</label><input type="tel" id="tel" inputmode="numeric" placeholder="809-000-0000" autocomplete="off" value="${esc(st.tel)}"></div>
+      <p class="err" id="e" hidden></p>`,
+      after: () => { mask($("ced"), fmtCed, 11); mask($("tel"), fmtTel, 10); },
+      go: async () => {
+        const nom = $("nom").value.replace(/\s+/g, " ").trim(), d = $("ced").value.replace(/\D/g, ""), t = $("tel").value.replace(/\D/g, "");
+        st.nom = nom; st.cedP = $("ced").value; st.tel = $("tel").value;
+        if (nom.split(" ").length < 2 || nom.length < 5) return err("Escriba el nombre y por lo menos un apellido.");
+        if (d.length !== 11) return err("La cédula debe tener 11 números.");
+        if (!cedOk(d)) return err("Esa cédula no es válida. Revise que los números estén bien escritos.");
+        if (!/^(809|829|849)\d{7}$/.test(t)) return err("Escriba un teléfono de 10 números que empiece con 809, 829 u 849.");
+        const r = await sb.rpc("cedula_registrada", { p_cedula: d });
+        if (r.error) return err(sinRed);
+        if (r.data && r.data.length) { const x = r.data[0]; return err(`Esta cédula ya fue registrada por <b>${esc(x.por)}</b> el ${new Date(x.fecha).toLocaleDateString("es-DO", { day: "numeric", month: "short" })}. No se puede registrar dos veces.`); }
+        const pd = await sb.rpc("consultar_padron", { p_cedula: d });
+        st.padron = pd.error ? "error" : (PADRON[pd.data] ? pd.data : "error");
+        st.cedD = d; st.telD = t; step = "verif"; return true;
+      }},
+    verif: { btn: "Enviar registro", html: () => { const [cl, tx] = PADRON[st.padron] || PADRON.error; return `
+      <div class="step">Paso 2 de 2</div><h2>Verificar en Verificate</h2>
+      <div class="pad ${cl}">${tx}</div>
+      <p class="small">Toque el botón: la cédula de <b>${esc(st.nom)}</b> (<b>${esc(st.cedP)}</b>) se copia sola y se abre Verificate. Allá: <b>mantenga apretado el campo Cédula → Pegar</b>, marque la casilla de Cloudflare y toque <b>Verifícate</b>.</p>
+      <a class="verif" id="abrirV" href="https://verificate.prm.do/" target="_blank" rel="noopener"><img src="data:image/png;base64,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" alt="Logo de Verificate PRM"><div><b>📋 Copiar cédula y abrir Verificate</b><span>Página oficial del PRM · se abre en otra pestaña</span></div></a>
+      <p class="small" id="copiado" hidden style="color:var(--ok);font-weight:600"></p>
+      <div class="ql">¿Qué mostró Verificate?</div>
+      <div class="opts">${RES.map(r => `<label class="opt" style="align-items:flex-start"><input type="radio" name="res" value="${r.v}" ${st.res === r.v ? "checked" : ""} style="margin-top:2px"><span><b>${r.i} ${r.v}</b><br><span class="small">${r.d}</span></span></label>`).join("")}</div>
+      <div class="q" id="notaQ" ${st.res === "No se pudo completar" ? "" : "hidden"}><label for="nota">¿Qué pasó? (opcional)</label><input type="text" id="nota" maxlength="120" placeholder="Ej.: falló la prueba de vida" value="${esc(st.nota)}"></div>
+      <p class="err" id="e" hidden></p>`; },
+      after: () => {
+        $("abrirV").addEventListener("click", () => {
+          const ok = () => { $("copiado").textContent = `✓ Cédula copiada: ${st.cedP}. En Verificate, mantenga apretado el campo y toque Pegar.`; $("copiado").hidden = false; };
+          const viejo = () => { try { const a = document.createElement("textarea"); a.value = st.cedD; a.setAttribute("readonly", ""); a.style.cssText = "position:fixed;opacity:0"; document.body.append(a); a.select(); const r = document.execCommand("copy"); a.remove(); if (r) ok(); else { $("copiado").textContent = `No se pudo copiar. Escriba la cédula: ${st.cedP}`; $("copiado").hidden = false; } } catch (e) {} };
+          if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(st.cedD).then(ok, viejo); else viejo();
+        });
+        document.querySelectorAll("input[name=res]").forEach(x => x.addEventListener("change", () => { $("notaQ").hidden = !(x.checked && x.value === "No se pudo completar"); }));
+      },
+      go: async () => {
+        const e = document.querySelector("input[name=res]:checked");
+        if (!e) return err("Marque el resultado que mostró Verificate.");
+        st.res = e.value; st.nota = st.res === "No se pudo completar" ? $("nota").value.trim().slice(0, 120) : "";
+        const { error } = await sb.from("registros").insert({ nombre: st.nom, cedula: st.cedD, telefono: st.telD, resultado: st.res, nota: st.nota || null });
+        if (error) {
+          if (error.code === "23505") return err("Esta cédula ya fue registrada por otro encuestador. No se puede registrar dos veces.");
+          if (error.code === "42501") return err("Su cuenta no puede enviar registros. Hable con el administrador.");
+          return err(/fetch|network/i.test(error.message || "") ? sinRed : "No se pudo enviar. Intente otra vez.");
+        }
+        try { if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(" "); } catch (_) {}
+        st = {}; step = "hecho"; return true;
+      }},
+    hecho: { btn: "Registrar otra persona", html: () => `
+      <div class="done"><div class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></div>
+      <h2>Registro enviado</h2><p class="small">Quedó guardado y el administrador ya lo puede ver.</p><div class="counter" id="cuenta">…</div><p class="small">personas verificadas hoy por usted</p></div>
+      <div class="ql">Sus verificados de hoy</div><div id="hoyLista" style="display:grid;gap:6px"><p class="small">Cargando…</p></div>`,
+      after: async () => {
+        const { data, error } = await sb.from("registros").select("nombre,resultado,creado").eq("encuestador_id", yo.id).order("creado", { ascending: false }).limit(200);
+        if (error) { $("hoyLista").innerHTML = `<p class="small">${sinRed}</p>`; return; }
+        $("cuenta").textContent = data.length;
+        $("hoyLista").innerHTML = data.slice(0, 20).map(x => `<div class="opt" style="cursor:default;justify-content:space-between"><span>${esc(x.nombre)}</span><span class="small">${(RES.find(r => r.v === x.resultado) || {}).i || ""} ${fFecha(x.creado)}</span></div>`).join("") || `<p class="small">Todavía nada.</p>`;
+      },
+      go: async () => { st = {}; step = "datos"; return true; }},
+    aviso: { btn: "Volver a entrar", html: () => `<div class="step">Aviso</div><h2>${esc(st.avisoT)}</h2><p class="small">${esc(st.avisoP)}</p>`,
+      go: async () => { st = {}; step = "entrar"; return true; }}
+  };
+
+  const ORDEN = ["entrar", "pin", "datos", "verif", "hecho", "aviso"];
+  function show() {
+    const s = S[step]; $("screen").innerHTML = s.html(); if (s.after) s.after();
+    $("next").textContent = s.btn;
+    $("back").hidden = step !== "verif";
+    $("bar").style.width = ({ datos: 50, verif: 100, hecho: 100 }[step] || 0) + "%";
+    $("logout").hidden = !(yo && (step === "datos" || step === "hecho" || step === "pin"));
+    $("screen").scrollTop = 0;
   }
-  $("lForm").addEventListener("submit", async e => {
-    e.preventDefault(); const btn = $("lBtn"); btn.disabled = true; lErr("");
-    try {
-      if (!$("pinNuevo").hidden) {
-        const a = $("nPin1").value.replace(/\D/g, ""), b = $("nPin2").value.replace(/\D/g, "");
-        if (a.length !== 6) return lErr("El PIN debe tener 6 números.");
-        if (a !== b) return lErr("Los dos PIN no son iguales.");
-        if (debil(a)) return lErr("Ese PIN es muy fácil de adivinar. Use otro.");
-        const r1 = await sb.auth.updateUser({ password: a }); if (r1.error) return lErr("No se pudo guardar el PIN. Pruebe con otro.");
-        const r2 = await sb.rpc("activar_mi_cuenta"); if (r2.error) return lErr(sinRed);
-        return await revisarEntrada();
-      }
-      const d = $("aCed").value.replace(/\D/g, ""), p = $("aPin").value.replace(/\D/g, "");
-      if (d.length !== 11 || p.length !== 6) return lErr("Escriba su cédula (11 números) y su PIN o código (6 números).");
-      const { error } = await sb.auth.signInWithPassword({ email: correo(d), password: p });
-      if (error) return lErr(/fetch|network/i.test(error.message) ? sinRed : "Cédula o PIN incorrectos.");
-      await revisarEntrada();
-    } catch (x) { lErr(sinRed); } finally { btn.disabled = false; $("lBtn").textContent = $("pinNuevo").hidden ? "Entrar" : "Guardar mi PIN y entrar"; }
+  async function despuesDeEntrar() {
+    try { yo = await miFicha(); } catch (e) { return err(sinRed); }
+    if (!yo) { await sb.auth.signOut(); st.avisoT = "Esta cuenta no está registrada"; st.avisoP = "Pida al administrador que lo agregue como encuestador."; step = "aviso"; return true; }
+    if (yo.estado === "bloqueado") { await sb.auth.signOut(); yo = null; st.avisoT = "Su acceso está bloqueado"; st.avisoP = "Hable con el administrador."; step = "aviso"; return true; }
+    quien();
+    step = yo.estado === "pendiente" ? "pin" : "datos"; return true;
+  }
+  $("next").addEventListener("click", async () => {
+    if (ocupado) return; ocupado = true; const b = $("next"), t = b.textContent; b.disabled = true; b.textContent = "Un momento…";
+    let ok = false; try { ok = await S[step].go(); } catch (e) { err(sinRed); }
+    b.disabled = false; b.textContent = t; ocupado = false;
+    if (ok) { show(); $("app").scrollIntoView({ block: "start", behavior: "smooth" }); }
   });
-  $("logout").addEventListener("click", async () => { try { await sb.auth.signOut(); } catch (e) {} location.reload(); });
-  function entrarAlPanel() {
-    $("login").hidden = true; $("panel").hidden = false;
-    $("adminName").textContent = "Administrador: " + yo.nombre;
-    cargar();
-  }
+  $("back").addEventListener("click", () => { if (step === "verif") { step = "datos"; show(); } });
+  $("app").addEventListener("submit", e => e.preventDefault());
+  $("logout").addEventListener("click", async () => {
+    try { await sb.auth.signOut(); } catch (e) {}
+    try { localStorage.removeItem(REC); } catch (e) {}
+    yo = null; st = {}; quien(); sb = crearCliente(); step = "entrar"; show();
+  });
 
-  // ===== Cargar datos de Supabase =====
-  async function cargar() {
-    $("estado").textContent = "Cargando datos…";
-    try {
-      const e = await sb.from("encuestadores").select("id,nombre,cedula,rol,estado,creado").order("nombre");
-      if (e.error) throw e.error; ENCS = e.data;
-      const nom = Object.fromEntries(ENCS.map(x => [x.id, x.nombre]));
-      let all = [], desde = 0;
-      for (;;) {
-        const r = await sb.from("registros").select("id,creado,nombre,cedula,telefono,resultado,nota,encuestador_id").order("creado", { ascending: false }).range(desde, desde + 999);
-        if (r.error) throw r.error; all = all.concat(r.data); if (r.data.length < 1000) break; desde += 1000;
-      }
-      DATA = all.map(r => ({ id: r.id, fecha: new Date(r.creado), nom: r.nombre, ced: fmtCed(r.cedula), tel: fmtTel(r.telefono), res: r.resultado, nota: r.nota || "", enc: nom[r.encuestador_id] || "—" }));
-      const cur = $("fEnc").value; fill("fEnc", [...new Set(DATA.map(x => x.enc))].sort()); $("fEnc").value = [...$("fEnc").options].some(o => o.value === cur) ? cur : "";
-      render();
-      $("estado").textContent = `Actualizado: ${new Date().toLocaleTimeString("es-DO", { hour: "numeric", minute: "2-digit" })} ·`;
-      const pd = await sb.rpc("estado_padron_cargado");
-      if (!pd.error && pd.data) $("padronInfo").textContent = pd.data.filas ? `Padrón cargado: ${nf.format(pd.data.filas)} personas${pd.data.clave ? "" : " (falta la clave)"}.` : "El padrón todavía no está cargado.";
-    } catch (x) { $("estado").textContent = sinRed; }
-  }
-  $("recargar").addEventListener("click", cargar);
-  setInterval(() => { if (!$("panel").hidden && document.visibilityState === "visible") cargar(); }, 120000);
+  // ===== Al abrir la app =====
+  (async () => {
+    $("screen").innerHTML = `<p class="small">Cargando…</p>`;
+    try { const t = +localStorage.getItem(REC); if (t && Date.now() - t > DIAS * 864e5) { localStorage.removeItem(REC); localStorage.removeItem("cv-sesion"); sb = crearCliente(); } } catch (e) {}
+    let ses = null; try { ses = (await sb.auth.getSession()).data.session; } catch (e) {}
+    if (ses) { step = "entrar"; const ok = await despuesDeEntrar(); if (ok !== true) step = "entrar"; } else step = "entrar";
+    show();
+  })();
 
-  // ===== Filtros =====
-  const fill = (id, opts) => { $(id).replaceChildren(new Option("Todos", ""), ...opts.map(o => new Option(o, o))); };
-  fill("fEnc", []); fill("fRes", RES);
-  ["fPer", "fEnc", "fRes"].forEach(id => $(id).addEventListener("change", render));
-  function filtered() {
-    const per = $("fPer").value, f = { enc: $("fEnc").value, res: $("fRes").value };
-    let desde = null; if (per !== "") { desde = hoyIni(); desde.setDate(desde.getDate() - (+per === 0 ? 0 : +per - 1)); }
-    return DATA.filter(r => Object.entries(f).every(([k, v]) => !v || r[k] === v) && (!desde || r.fecha >= desde));
-  }
-  const filtrosTxt = () => { const a = []; if ($("fPer").value !== "") a.push($("fPer").selectedOptions[0].text); ["fEnc", "fRes"].forEach(id => { if ($(id).value) a.push($(id).value); }); return a.length ? a.join(", ") : "ninguno (todo)"; };
-
-  const tip = $("tip");
-  function bindTip(el, text) { el.addEventListener("pointermove", e => { tip.textContent = text; tip.hidden = false; const x = Math.min(e.clientX + 12, window.innerWidth - tip.offsetWidth - 8); tip.style.left = x + "px"; tip.style.top = (e.clientY + 14) + "px"; }); el.addEventListener("pointerleave", () => { tip.hidden = true; }); }
-  function row(host, vals, numFrom, click) { const tr = document.createElement("tr"); vals.forEach((v, i) => { const td = document.createElement("td"); if (i >= numFrom) td.className = "num"; if (v instanceof Node) td.append(v); else td.textContent = v; tr.append(td); }); if (click) { tr.className = "clk"; tr.addEventListener("click", click); } host.append(tr); return tr; }
-  const pill = res => { const i = RES.indexOf(res), s = document.createElement("span"); s.className = "pill " + RC[i]; s.textContent = RI[i] + " " + res; return s; };
-  const cuenta = l => RES.map(r => l.filter(x => x.res === r).length);
-  const boton = (txt, fn, peligro) => { const b = document.createElement("button"); b.type = "button"; b.textContent = txt; b.style.cssText = "padding:4px 9px;font-size:12px;margin:2px" + (peligro ? ";color:var(--g4)" : ""); b.addEventListener("click", e => { e.stopPropagation(); fn(b); }); return b; };
-
-  function render() {
-    const rows = filtered(), T = rows.length, c = cuenta(rows);
-    $("kTot").textContent = nf.format(T); $("kTotS").textContent = T === DATA.length ? "en total" : `de ${nf.format(DATA.length)} en total`;
-    c.forEach((v, i) => { $("k" + (i + 1)).textContent = nf.format(v); $("k" + (i + 1) + "s").textContent = T ? pf(v / T) + " de los verificados" : ""; });
-    $("kHoy").textContent = nf.format(rows.filter(r => r.fecha >= hoyIni()).length);
-    $("rbar").replaceChildren(...c.map((v, i) => { const e = document.createElement("i"); e.className = "r" + (i + 1); e.style.width = (T ? v / T * 100 : 0) + "%"; bindTip(e, `${RES[i]}: ${nf.format(v)} (${T ? pf(v / T) : "—"})`); return e; }));
-    $("leg3").replaceChildren(...c.map((v, i) => { const s = document.createElement("span"); const k = document.createElement("i"); k.className = "r" + (i + 1); s.append(k, `${RES[i]}: ${nf.format(v)} · ${T ? pf(v / T) : "—"}`); return s; }));
-    const days = [...Array(14)].map((_, i) => { const d = new Date(); d.setDate(d.getDate() - 13 + i); return d; });
-    const dc = days.map(d => { const l = rows.filter(r => r.fecha.toDateString() === d.toDateString()); return { n: l.length, c: cuenta(l) }; });
-    const dm = Math.max(1, ...dc.map(x => x.n));
-    $("chDays").replaceChildren(...dc.map((x, i) => { const b = document.createElement("div"); b.className = "day"; b.style.height = (x.n / dm * 100) + "%"; x.c.forEach((v, j) => { const s = document.createElement("i"); s.className = "r" + (j + 1); s.style.height = (x.n ? v / x.n * 100 : 0) + "%"; b.append(s); }); bindTip(b, `${days[i].toLocaleDateString("es-DO", { weekday: "short", day: "numeric", month: "short" })}: ${x.n} verificados (✅ ${x.c[0]} · 🔄 ${x.c[1]} · 🆕 ${x.c[2]} · ⚠️ ${x.c[3]})`); return b; }));
-    $("chDaysL").replaceChildren(...days.map((d, i) => { const s = document.createElement("span"); s.textContent = (i % 2 === 1 || i === 13) ? d.getDate() : ""; return s; }));
-    const te = $("tEnc"); te.replaceChildren();
-    [...new Set(rows.map(r => r.enc))].map(e => { const l = rows.filter(r => r.enc === e); return { e, l, c: cuenta(l) }; }).sort((a, b) => b.l.length - a.l.length)
-      .forEach(x => row(te, [x.e, nf.format(x.l.length), nf.format(x.c[0]), nf.format(x.c[1]), nf.format(x.c[2]), `${nf.format(x.c[3])} (${pf(x.c[3] / x.l.length)})`, fFecha(x.l[0].fecha)], 1, () => { $("fEnc").value = x.e; render(); }));
-    if (!te.children.length) row(te, ["Todavía no hay registros con estos filtros"], 9);
-    renderList(); renderReg();
-  }
-  function listaFiltrada() { const q = $("q").value.trim().toLowerCase(), qd = q.replace(/\D/g, ""); return filtered().filter(r => !q || r.nom.toLowerCase().includes(q) || (qd.length >= 3 && (r.ced.replace(/\D/g, "").includes(qd) || r.tel.replace(/\D/g, "").includes(qd)))); }
-  function renderList() {
-    const l = listaFiltrada(), tb = $("tList"); tb.replaceChildren();
-    l.slice(0, lim).forEach(r => {
-      const tr = row(tb, [fFecha(r.fecha), r.nom, r.ced, r.tel, pill(r.res), r.enc, boton("Borrar", b => borrar(r, b), true)], 99); if (r.nota) tr.title = "Nota: " + r.nota; });
-    if (!l.length) row(tb, ["No hay personas con esta búsqueda o estos filtros"], 99);
-    $("qInfo").textContent = `${nf.format(l.length)} ${l.length === 1 ? "persona" : "personas"}. ${l.length > lim ? `Se muestran las ${lim} más recientes.` : ""}`;
-    $("mas").hidden = l.length <= lim;
-  }
-  async function borrar(r, b) {
-    if (!window.confirm(`¿Borrar a ${r.nom} (${r.ced})?\n\nÚselo solo si la persona pidió que la saquen o si fue un error. No se puede deshacer.`)) return;
-    b.disabled = true; const { error } = await sb.from("registros").delete().eq("id", r.id);
-    if (error) { b.disabled = false; alert("No se pudo borrar. " + sinRed); return; }
-    DATA = DATA.filter(x => x.id !== r.id); render();
-  }
-  $("q").addEventListener("input", () => { lim = 50; renderList(); });
-  $("mas").addEventListener("click", () => { lim += 100; renderList(); });
-
-  // ===== Encuestadores =====
-  const EST = { activo: ["Activo", "p1"], pendiente: ["Pendiente (no ha creado su PIN)", "p3"], bloqueado: ["Bloqueado", "p2"] };
-  function mostrarCodigo(nombre, cod) {
-    const box = $("codeBox"); box.replaceChildren();
-    const a = document.createElement("div"); a.textContent = `Código de activación para ${nombre}:`;
-    const c = document.createElement("div"); c.className = "code"; c.textContent = cod;
-    const n = document.createElement("p"); n.className = "note"; n.textContent = "Déselo en persona o por llamada. Con este código entra la primera vez y crea su propio PIN. Después el código deja de servir. Este número no se vuelve a mostrar.";
-    box.append(a, c, n); box.hidden = false;
-  }
-  function renderReg() {
-    const tb = $("tReg"); tb.replaceChildren();
-    ENCS.filter(e => e.id !== (yo && yo.id)).forEach(e => {
-      const n = DATA.filter(r => r.enc === e.nombre).length;
-      const s = document.createElement("span"); const [t, cl] = EST[e.estado] || [e.estado, "p3"]; s.className = "pill " + cl; s.textContent = t;
-      const acc = document.createElement("div");
-      if (e.estado === "bloqueado") acc.append(boton("Desbloquear", b => cambiarEstado(e, "activo", b)));
-      else acc.append(boton("Bloquear", b => cambiarEstado(e, "bloqueado", b), true));
-      acc.append(boton("Nuevo código", b => nuevoCodigo(e, b)));
-      row(tb, [e.nombre + (e.rol === "admin" ? " (administrador)" : ""), fmtCed(e.cedula), s, nf.format(n), acc], 3);
+  // ===== Botón "atrás" del celular: preguntar antes de salir =====
+  (function () {
+    let armado = false, saliendo = false;
+    const enCurso = () => step === "verif" || (step === "datos" && !!(st.nom || st.cedP || st.tel));
+    function armar() { if (armado || saliendo || !$("salir").hidden) return; armado = true; try { history.pushState({ cv: 1 }, ""); } catch (e) {} }
+    document.addEventListener("pointerdown", armar, true);
+    document.addEventListener("keydown", armar, true);
+    addEventListener("popstate", () => {
+      if (saliendo) return; armado = false;
+      $("salirP").textContent = enCurso() ? "Tiene un registro sin enviar. Si sale ahora, se pierde." : "Puede volver a entrar cuando quiera.";
+      $("salir").hidden = false; $("salirNo").focus();
     });
-    if (!tb.children.length) row(tb, ["Todavía no hay encuestadores. Agregue el primero arriba."], 9);
-  }
-  async function cambiarEstado(e, est, b) {
-    if (est === "bloqueado" && !window.confirm(`¿Bloquear a ${e.nombre}? No podrá entrar ni enviar registros.`)) return;
-    b.disabled = true; const { error } = await sb.rpc("cambiar_estado", { p_id: e.id, p_estado: est });
-    if (error) { b.disabled = false; alert(sinRed); return; } e.estado = est; renderReg();
-  }
-  async function nuevoCodigo(e, b) {
-    if (!window.confirm(`¿Dar un código nuevo a ${e.nombre}? Su PIN actual deja de servir y tendrá que crear uno nuevo.`)) return;
-    b.disabled = true; const { data, error } = await sb.rpc("nuevo_codigo", { p_id: e.id });
-    b.disabled = false; if (error) { alert(sinRed); return; } e.estado = "pendiente"; renderReg(); mostrarCodigo(e.nombre, data); $("codeBox").scrollIntoView({ block: "center", behavior: "smooth" });
-  }
-  $("nCed").addEventListener("input", e => { e.target.value = fmtCed(e.target.value.replace(/\D/g, "").slice(0, 11)); });
-  $("addForm").addEventListener("submit", async ev => {
-    ev.preventDefault(); const er = $("addErr"); er.hidden = true;
-    const nom = $("nNom").value.replace(/\s+/g, " ").trim(), d = $("nCed").value.replace(/\D/g, "");
-    const fallo = m => { er.textContent = m; er.hidden = false; };
-    if (nom.split(" ").length < 2) return fallo("Escriba nombre y apellido.");
-    if (d.length !== 11) return fallo("La cédula debe tener 11 números.");
-    const { data, error } = await sb.rpc("crear_encuestador", { p_nombre: nom, p_cedula: d });
-    if (error) return fallo(/ya_existe/.test(error.message) ? "Esa cédula ya tiene cuenta." : /fetch|network/i.test(error.message) ? sinRed : "No se pudo agregar. Revise los datos.");
-    $("nNom").value = ""; $("nCed").value = ""; mostrarCodigo(nom, data); await cargar();
-  });
-
-  // ===== Imprimir =====
-  function tabla(head, body, num) { const t = document.createElement("table"), th = document.createElement("thead"), tr = document.createElement("tr"); head.forEach((h, i) => { const c = document.createElement("th"); c.textContent = h; if (i >= num) c.className = "num"; tr.append(c); }); th.append(tr); const tb = document.createElement("tbody"); body.forEach(r => row(tb, r.map(v => v instanceof Node ? v.textContent : v), num)); t.append(th, tb); return t; }
-  function cabeza(titulo) { const pa = $("printArea"); pa.replaceChildren(); const h = document.createElement("h1"); h.textContent = titulo + " · Control Verificate PRM"; const m = document.createElement("p"); m.className = "note"; m.textContent = `Fecha: ${new Date().toLocaleString("es-DO", { dateStyle: "long", timeStyle: "short" })} · Preparado por: ${yo.nombre} · Filtros: ${filtrosTxt()}`; pa.append(h, m); return pa; }
-  const h2 = t => { const e = document.createElement("h2"); e.textContent = t; return e; };
-  $("pRes").addEventListener("click", () => { const rows = filtered(), T = rows.length, c = cuenta(rows), pa = cabeza("Total");
-    pa.append(h2("1. Resumen"), tabla(["Resultado", "Verificados", "%"], [...RES.map((r, i) => [RI[i] + " " + r, nf.format(c[i]), T ? pf(c[i] / T) : "—"]), ["Total verificados", nf.format(T), T ? "100%" : "—"]], 1));
-    const enc = [...new Set(rows.map(r => r.enc))].map(e => { const l = rows.filter(r => r.enc === e); return [e, l.length, ...cuenta(l)]; }).sort((a, b) => b[1] - a[1]);
-    pa.append(h2("2. Por encuestador"), tabla(["Encuestador", "Verificados", "Ya miembros", "Confirmados", "Nuevos", "No completados"], [...enc.map(x => x.map((v, i) => i ? nf.format(v) : v)), ["Total", nf.format(T), ...c.map(v => nf.format(v))]], 1));
-    window.print(); });
-  $("pList").addEventListener("click", () => { const l = listaFiltrada(), pa = cabeza("Lista de personas");
-    const n = document.createElement("p"); n.className = "note"; n.textContent = `${nf.format(l.length)} personas. Documento confidencial: contiene datos personales.`; pa.append(n);
-    pa.append(tabla(["Fecha", "Nombre", "Cédula", "Teléfono", "Resultado", "Encuestador"], l.map(r => [fFecha(r.fecha), r.nom, r.ced, r.tel, RI[RES.indexOf(r.res)] + " " + r.res + (r.nota ? ` (${r.nota})` : ""), r.enc]), 99));
-    window.print(); });
-  $("clear").addEventListener("click", () => { ["fPer", "fEnc", "fRes"].forEach(id => $(id).value = ""); $("q").value = ""; render(); });
-
-  // ===== Al abrir: si ya había sesión en esta pestaña, entra directo =====
-  (async () => { try { const s = (await sb.auth.getSession()).data.session; if (s) await revisarEntrada(); } catch (e) {} })();
+    $("salirNo").addEventListener("click", () => { $("salir").hidden = true; armar(); });
+    $("salirSi").addEventListener("click", () => {
+      saliendo = true; $("salir").hidden = true; history.back();
+      setTimeout(() => { try { window.close(); } catch (e) {}
+        $("salirT").textContent = "Puede cerrar esta pestaña";
+        $("salirP").textContent = "Para salir, cierre la pestaña o la aplicación. Si quiere seguir, toque Volver.";
+        $("salirSi").hidden = true; $("salirNo").textContent = "Volver"; $("salir").hidden = false;
+        $("salirNo").onclick = () => { saliendo = false; $("salirSi").hidden = false; $("salirNo").textContent = "Quedarme"; $("salirT").textContent = "¿Desea salir de la aplicación?"; $("salir").hidden = true; armar(); };
+      }, 600);
+    });
+    addEventListener("beforeunload", e => { if (enCurso() && !saliendo) { e.preventDefault(); e.returnValue = ""; } });
+  })();
 })();
 
 </script>
+
 </body>
 </html>
