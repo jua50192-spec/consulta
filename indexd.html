@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#1f4fa3">
+<style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0}body{-webkit-text-size-adjust:100%}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Control Verificate PRM</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+[hidden]{display:none!important}
+/* Layout: un celular centrado con el formulario por pasos; barra de progreso arriba y botones abajo */
+:root{
+  --bg:#e9ecf2; --phone:#ffffff; --ink:#18202e; --muted:#5d6678; --line:#dfe2ea; --soft:#f1f3f7;
+  --accent:#1f4fa3; --accent-ink:#ffffff; --warn-bg:#fff4d6; --warn-ink:#7a5200; --ok:#1d7a46; --bad:#b3261e;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif; --body:"Public Sans","Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1118; --phone:#171d28; --ink:#e7eaf1; --muted:#9aa3b5; --line:#2a3242; --soft:#212938;
+  --accent:#7aa5f0; --accent-ink:#0d1118; --warn-bg:#3a2f12; --warn-ink:#f2d07a; --ok:#3fb172; --bad:#f08077; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1118; --phone:#171d28; --ink:#e7eaf1; --muted:#9aa3b5; --line:#2a3242; --soft:#212938;
+  --accent:#7aa5f0; --accent-ink:#0d1118; --warn-bg:#3a2f12; --warn-ink:#f2d07a; --ok:#3fb172; --bad:#f08077; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+.page{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 32px;display:grid;justify-items:center;gap:12px}
+.demo{max-width:420px;width:100%;background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:8px 12px;font-size:13px}
+.phone{width:100%;max-width:400px;background:var(--phone);border:1px solid var(--line);border-radius:28px;box-shadow:0 18px 40px rgba(10,20,40,.18);overflow:hidden;display:grid;grid-template-rows:auto auto 1fr auto;min-height:680px}
+.top{background:var(--accent);color:var(--accent-ink);padding:14px 18px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.top b{font-family:var(--display);font-weight:800;letter-spacing:.01em}
+.top span{font-size:12px;opacity:.9}
+.prog{height:5px;background:var(--soft)} .prog i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.body{padding:18px;display:grid;gap:14px;align-content:start}
+h2{font-family:var(--display);font-weight:800;font-size:20px;margin:0;text-wrap:balance}
+.step{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.q{display:grid;gap:7px}
+.q > label,.ql{font-weight:600}
+input[type=text],input[type=password],input[type=tel],select{font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--phone);color:var(--ink);width:100%}
+.opts{display:grid;gap:7px}
+.opts.row{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.opts.two{grid-template-columns:1fr 1fr}
+.opt{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;cursor:pointer;font-weight:500}
+.opt:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.opt input{accent-color:var(--accent);width:18px;height:18px;margin:0}
+.read{background:var(--soft);border-radius:10px;padding:12px;font-style:italic}
+.small{font-size:12.5px;color:var(--muted)}
+.gps{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ok)}
+.gps::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.grid5{display:grid;gap:10px}
+.cand{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:7px}
+.cand b{font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.chip span{display:block;padding:6px 10px;border:1px solid var(--line);border-radius:999px;font-size:13px}
+.chip input:checked + span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+.photo{border:2px dashed var(--line);border-radius:12px;min-height:150px;display:grid;place-items:center;text-align:center;padding:12px;color:var(--muted);cursor:pointer;overflow:hidden}
+.photo img{width:100%;max-width:340px;aspect-ratio:85.6/53.98;object-fit:cover;border-radius:8px}
+.photo-btns{display:flex;gap:8px;flex-wrap:wrap}
+.photo-btns button{flex:1 1 140px;padding:11px 12px;border-radius:10px}
+.photo-btns button.cam{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.size{font-size:12.5px;color:var(--ok);font-weight:600}
+.verif{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:#fff;border:2px solid #1f4fa3;color:#1f2a44;text-decoration:none}
+.verif img{width:46px;height:auto;flex:none}
+.verif b{display:block;font-size:16px;color:#1f4fa3}
+.verif span{font-size:13px;color:#4a5568}
+.link{display:block;text-align:center;padding:11px;border-radius:10px;border:1px solid var(--accent);color:var(--accent);font-weight:600;text-decoration:none}
+@media (max-width:520px){.page{padding:0;gap:0}.demo{border-radius:0;max-width:none}
+  .phone{max-width:none;border:0;border-radius:0;box-shadow:none;min-height:100vh;min-height:100dvh}
+  .top{padding-top:calc(14px + env(safe-area-inset-top,0px))}.nav{padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}}
+.err{color:var(--bad);font-size:13px;font-weight:600}
+.lo{border:1px solid rgba(255,255,255,.45);background:transparent;color:inherit;font-size:12px;padding:4px 9px;border-radius:8px;margin-left:8px}
+.recordar{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.35}
+.recordar input{width:20px;height:20px;margin-top:1px;flex:none}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:12px;padding:4px;gap:4px}
+.tabs button{border:0;background:transparent;padding:9px;border-radius:9px;font-weight:600;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--phone);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.cam-ov{position:fixed;inset:0;z-index:50;background:#000;color:#fff;display:grid;grid-template-rows:auto 1fr auto auto;gap:10px;
+  padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.cam-t{font-family:var(--display);font-weight:800;font-size:18px;text-align:center}
+.cam-box{position:relative;min-height:0;display:grid;place-items:center;overflow:hidden;border-radius:14px}
+.cam-box video{width:100%;height:100%;object-fit:contain;background:#000}
+.cam-dim{position:absolute;left:50%;top:-30px;transform:translateX(-50%);white-space:nowrap;font-size:12.5px;font-weight:600;background:rgba(0,0,0,.55);padding:3px 10px;border-radius:999px}
+.cam-guide{position:absolute;width:86%;max-width:520px;aspect-ratio:85.6/53.98;border:3px solid rgba(255,255,255,.9);border-radius:12px;box-shadow:0 0 0 2000px rgba(0,0,0,.35);pointer-events:none}
+.cam-h{margin:0;text-align:center;font-size:14px;opacity:.9}
+.cam-b{display:flex;gap:10px}.cam-b button{flex:1;padding:14px}.cam-b .cx{background:#222;color:#fff;border-color:#444}
+.hint{background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5}
+.nav{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--line)}
+button{font:inherit;font-weight:600;border-radius:12px;padding:13px 14px;cursor:pointer;border:1px solid var(--line);background:var(--phone);color:var(--ink);flex:1}
+.salir{position:fixed;inset:0;z-index:50;background:rgba(10,14,24,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.salir .box{background:var(--phone);color:var(--ink);border-radius:16px;padding:22px 20px;max-width:340px;width:100%;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.salir h3{margin:0 0 8px;font-size:19px}
+.salir p{margin:0 0 18px;color:var(--muted);font-size:15px;line-height:1.45}
+.salir .acc{display:flex;gap:10px}
+.salir .acc button{flex:1;padding:13px 10px;font-size:16px}
+button.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);flex:2}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.done{display:grid;justify-items:center;text-align:center;gap:10px;padding-top:40px}
+.done .ck{width:72px;height:72px;border-radius:50%;background:color-mix(in srgb,var(--ok) 15%,transparent);display:grid;place-items:center}
+.done .ck svg{width:38px;height:38px}
+.counter{font-family:var(--display);font-size:34px;font-weight:800}
+.pad{border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.4;border:1px solid var(--line)}
+.pad.av{background:#fff4d6;border-color:#e0b64a;color:#5a4300}
+.pad.ok{background:#e4f5ea;border-color:#7cc497;color:#16502c}
+.pad.in{background:var(--soft,#f1f3f7);color:var(--ink)}
+@media (prefers-color-scheme:dark){.pad.av{background:#3a2f10;color:#f5dc9a}.pad.ok{background:#12301f;color:#a6e3bb}}
+button:disabled{opacity:.6}
+</style>
+<div class="page">
+  <form class="phone" id="app" novalidate>
+    <div class="top"><b>Control Verificate</b><span><span id="who">Sin sesión</span><button type="button" class="lo" id="logout" hidden>Cerrar sesión</button></span></div>
+    <div class="prog"><i id="bar" style="width:0%"></i></div>
+    <div class="body" id="screen"></div>
+    <div class="nav"><button type="button" id="back" hidden>Atrás</button><button type="button" class="pri" id="next">Entrar</button></div>
+  </form>
+</div>
+<div class="salir" id="salir" hidden role="dialog" aria-modal="true" aria-labelledby="salirT">
+  <div class="box">
+    <h3 id="salirT">¿Desea salir de la aplicación?</h3>
+    <p id="salirP"></p>
+    <div class="acc"><button type="button" class="pri" id="salirNo">Quedarme</button><button type="button" id="salirSi">Salir</button></div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+<script>
+(() => {
+  // ===== Conexión con Supabase (llave PÚBLICA: está hecha para ir en la página) =====
+  const SB_URL = "https://mwegrgsuuyggvvgdqqiv.supabase.co";
+  const SB_KEY = "sb_publishable_OBbZi8I8pnyhbyu5v6UOFA_QqV0GBbm";
+  const REC = "cv_recordar", DIAS = 30;
+  const correo = ced => `c${ced}@control-verificate.example`;
+  const almacen = () => { try { return localStorage.getItem(REC) ? localStorage : sessionStorage; } catch (e) { return undefined; } };
+  const crearCliente = () => (window.__crearCliente || window.supabase.createClient)(SB_URL, SB_KEY,
+    { auth: { storage: almacen(), storageKey: "cv-sesion", persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
+  let sb = crearCliente();
+
+  const RES = [
+    { v: "Ya era miembro", i: "✅", d: "Verificate dice: “Ya formas parte del padrón verificado del PRM”." },
+    { v: "Confirmado", i: "🔄", d: "Estaba a confirmar y ya fue confirmado." },
+    { v: "Nuevo inscrito", i: "🆕", d: "Verificate le preguntó si desea formar parte del PRM, dijo que sí e hizo completa la prueba de vida." },
+    { v: "No se pudo completar", i: "⚠️", d: "Empezó pero no terminó: la página no cargó, falló la prueba de vida u otro motivo." }];
+  const PADRON = {
+    "A CONFIRMAR": ["av", "Padrón: <b>A CONFIRMAR</b>. Hay que confirmarla en Verificate (prueba de vida)."],
+    "RATIFICADO": ["ok", "Padrón: <b>RATIFICADO</b>. Ya es miembro. Verificate debería decir “Ya formas parte del padrón verificado”."],
+    "CONFIRMADO": ["ok", "Padrón: <b>CONFIRMADO</b>. Ya es miembro. Verificate debería decir “Ya formas parte del padrón verificado”."],
+    "NUEVA INSCRIPCION": ["ok", "Padrón: <b>NUEVA INSCRIPCIÓN</b>. Ya se inscribió antes."],
+    "EN PADRON": ["in", "Está en el padrón del Distrito Nacional. Revise en Verificate cómo está."],
+    "NO ESTA": ["in", "No aparece en el padrón del Distrito Nacional (puede ser de otra provincia o una persona nueva). Verificate le dirá."],
+    "limite": ["in", "Llegó al límite de búsquedas por hora. Siga con Verificate."],
+    "error": ["in", "No se pudo revisar el padrón ahora. Siga con Verificate."]};
+
+  let step = 0, st = {}, yo = null, ocupado = false;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const fmtCed = d => d.length > 10 ? `${d.slice(0,3)}-${d.slice(3,10)}-${d.slice(10)}` : d.length > 3 ? `${d.slice(0,3)}-${d.slice(3)}` : d;
+  const fmtTel = d => d.length > 6 ? `${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}` : d.length > 3 ? `${d.slice(0,3)}-${d.slice(3)}` : d;
+  const cedOk = d => { if (!/^\d{11}$/.test(d)) return false; let s = 0; for (let i = 0; i < 10; i++) { let n = +d[i] * (i % 2 ? 2 : 1); s += n > 9 ? n - 9 : n; } return (10 - s % 10) % 10 === +d[10]; };
+  const debil = p => /^(\d)\1{5}$/.test(p) || "0123456789".includes(p) || "9876543210".includes(p) || ["123123","112233","121212"].includes(p);
+  const mask = (el, f, max) => el.addEventListener("input", () => { el.value = f(el.value.replace(/\D/g, "").slice(0, max)); });
+  const sinRed = "No hay conexión con el servidor. Revise su internet e intente otra vez.";
+  const err = (m) => { const e = $("e"); if (e) { e.innerHTML = m; e.hidden = false; } return false; };
+  const quien = () => { $("who").textContent = yo ? yo.nombre : "Sin sesión"; };
+  const fFecha = s => new Date(s).toLocaleTimeString("es-DO", { hour: "numeric", minute: "2-digit" });
+
+  async function miFicha() {
+    const { data: u } = await sb.auth.getUser();
+    if (!u || !u.user) return null;
+    const { data, error } = await sb.from("encuestadores").select("id,nombre,rol,estado").eq("id", u.user.id).maybeSingle();
+    if (error) throw error;
+    return data;
+  }
+
+  // ===== Pantallas =====
+  const S = {
+    entrar: { btn: "Entrar", html: () => `
+      <div class="step">Acceso del encuestador</div><h2>Entre con su cédula</h2>
+      <div class="q"><label for="u">Cédula</label><input type="tel" id="u" inputmode="numeric" placeholder="000-0000000-0" autocomplete="username"></div>
+      <div class="q"><label for="p">PIN o código de activación</label><input type="password" id="p" inputmode="numeric" maxlength="6" placeholder="6 números" autocomplete="current-password"></div>
+      <p class="small">¿Primera vez? Use el <b>código de 6 números</b> que le dio el administrador. Después creará su propio PIN.</p>
+      <label class="recordar"><input type="checkbox" id="rec" checked><span><b>Recordar este celular por 30 días.</b> Desmárquelo si el celular no es suyo.</span></label>
+      <p class="err" id="e" hidden></p>`,
+      after: () => { mask($("u"), fmtCed, 11); },
+      go: async () => {
+        const d = $("u").value.replace(/\D/g, ""), p = $("p").value.replace(/\D/g, "");
+        if (d.length !== 11 || p.length !== 6) return err("Escriba su cédula (11 números) y su PIN o código (6 números).");
+        try { if ($("rec").checked) localStorage.setItem(REC, String(Date.now())); else localStorage.removeItem(REC); } catch (e) {}
+        sb = crearCliente();
+        const { error } = await sb.auth.signInWithPassword({ email: correo(d), password: p });
+        if (error) return err(/fetch|network/i.test(error.message) ? sinRed : "Cédula o PIN incorrectos.");
+        return await despuesDeEntrar();
+      }},
+    pin: { btn: "Guardar mi PIN", html: () => `
+      <div class="step">Primera vez</div><h2>Cree su PIN</h2>
+      <p class="small">Hola, <b>${esc(yo.nombre)}</b>. Cree un PIN de 6 números. Con él entrará de ahora en adelante. No se lo diga a nadie.</p>
+      <div class="q"><label for="p1">Nuevo PIN</label><input type="password" id="p1" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
+      <div class="q"><label for="p2">Repita el PIN</label><input type="password" id="p2" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
+      <p class="err" id="e" hidden></p>`,
+      go: async () => {
+        const a = $("p1").value.replace(/\D/g, ""), b = $("p2").value.replace(/\D/g, "");
+        if (a.length !== 6) return err("El PIN debe tener 6 números.");
+        if (a !== b) return err("Los dos PIN no son iguales.");
+        if (debil(a)) return err("Ese PIN es muy fácil de adivinar. Use otro.");
+        const r1 = await sb.auth.updateUser({ password: a });
+        if (r1.error) return err(/fetch|network/i.test(r1.error.message) ? sinRed : "No se pudo guardar el PIN. Pruebe con otro.");
+        const r2 = await sb.rpc("activar_mi_cuenta");
+        if (r2.error) return err(sinRed);
+        yo = await miFicha(); quien();
+        step = "datos"; return true;
+      }},
+    datos: { btn: "Continuar", html: () => `
+      <div class="step">Paso 1 de 2</div><h2>Datos de la persona</h2>
+      <div class="q"><label for="nom">Nombre y apellido</label><input type="text" id="nom" autocomplete="off" value="${esc(st.nom)}"></div>
+      <div class="q"><label for="ced">Cédula</label><input type="tel" id="ced" inputmode="numeric" placeholder="000-0000000-0" autocomplete="off" value="${esc(st.cedP)}"></div>
+      <div class="q"><label for="tel">Teléfono</label><input type="tel" id="tel" inputmode="numeric" placeholder="809-000-0000" autocomplete="off" value="${esc(st.tel)}"></div>
+      <p class="err" id="e" hidden></p>`,
+      after: () => { mask($("ced"), fmtCed, 11); mask($("tel"), fmtTel, 10); },
+      go: async () => {
+        const nom = $("nom").value.replace(/\s+/g, " ").trim(), d = $("ced").value.replace(/\D/g, ""), t = $("tel").value.replace(/\D/g, "");
+        st.nom = nom; st.cedP = $("ced").value; st.tel = $("tel").value;
+        if (nom.split(" ").length < 2 || nom.length < 5) return err("Escriba el nombre y por lo menos un apellido.");
+        if (d.length !== 11) return err("La cédula debe tener 11 números.");
+        if (!cedOk(d)) return err("Esa cédula no es válida. Revise que los números estén bien escritos.");
+        if (!/^(809|829|849)\d{7}$/.test(t)) return err("Escriba un teléfono de 10 números que empiece con 809, 829 u 849.");
+        const r = await sb.rpc("cedula_registrada", { p_cedula: d });
+        if (r.error) return err(sinRed);
+        if (r.data && r.data.length) { const x = r.data[0]; return err(`Esta cédula ya fue registrada por <b>${esc(x.por)}</b> el ${new Date(x.fecha).toLocaleDateString("es-DO", { day: "numeric", month: "short" })}. No se puede registrar dos veces.`); }
+        const pd = await sb.rpc("consultar_padron", { p_cedula: d });
+        st.padron = pd.error ? "error" : (PADRON[pd.data] ? pd.data : "error");
+        st.cedD = d; st.telD = t; step = "verif"; return true;
+      }},
+    verif: { btn: "Enviar registro", html: () => { const [cl, tx] = PADRON[st.padron] || PADRON.error; return `
+      <div class="step">Paso 2 de 2</div><h2>Verificar en Verificate</h2>
+      <div class="pad ${cl}">${tx}</div>
+      <p class="small">Toque el botón: la cédula de <b>${esc(st.nom)}</b> (<b>${esc(st.cedP)}</b>) se copia sola y se abre Verificate. Allá: <b>mantenga apretado el campo Cédula → Pegar</b>, marque la casilla de Cloudflare y toque <b>Verifícate</b>.</p>
+      <a class="verif" id="abrirV" href="https://verificate.prm.do/" target="_blank" rel="noopener"><img src="data:image/png;base64,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" alt="Logo de Verificate PRM"><div><b>📋 Copiar cédula y abrir Verificate</b><span>Página oficial del PRM · se abre en otra pestaña</span></div></a>
+      <p class="small" id="copiado" hidden style="color:var(--ok);font-weight:600"></p>
+      <div class="ql">¿Qué mostró Verificate?</div>
+      <div class="opts">${RES.map(r => `<label class="opt" style="align-items:flex-start"><input type="radio" name="res" value="${r.v}" ${st.res === r.v ? "checked" : ""} style="margin-top:2px"><span><b>${r.i} ${r.v}</b><br><span class="small">${r.d}</span></span></label>`).join("")}</div>
+      <div class="q" id="notaQ" ${st.res === "No se pudo completar" ? "" : "hidden"}><label for="nota">¿Qué pasó? (opcional)</label><input type="text" id="nota" maxlength="120" placeholder="Ej.: falló la prueba de vida" value="${esc(st.nota)}"></div>
+      <p class="err" id="e" hidden></p>`; },
+      after: () => {
+        $("abrirV").addEventListener("click", () => {
+          const ok = () => { $("copiado").textContent = `✓ Cédula copiada: ${st.cedP}. En Verificate, mantenga apretado el campo y toque Pegar.`; $("copiado").hidden = false; };
+          const viejo = () => { try { const a = document.createElement("textarea"); a.value = st.cedD; a.setAttribute("readonly", ""); a.style.cssText = "position:fixed;opacity:0"; document.body.append(a); a.select(); const r = document.execCommand("copy"); a.remove(); if (r) ok(); else { $("copiado").textContent = `No se pudo copiar. Escriba la cédula: ${st.cedP}`; $("copiado").hidden = false; } } catch (e) {} };
+          if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(st.cedD).then(ok, viejo); else viejo();
+        });
+        document.querySelectorAll("input[name=res]").forEach(x => x.addEventListener("change", () => { $("notaQ").hidden = !(x.checked && x.value === "No se pudo completar"); }));
+      },
+      go: async () => {
+        const e = document.querySelector("input[name=res]:checked");
+        if (!e) return err("Marque el resultado que mostró Verificate.");
+        st.res = e.value; st.nota = st.res === "No se pudo completar" ? $("nota").value.trim().slice(0, 120) : "";
+        const { error } = await sb.from("registros").insert({ nombre: st.nom, cedula: st.cedD, telefono: st.telD, resultado: st.res, nota: st.nota || null });
+        if (error) {
+          if (error.code === "23505") return err("Esta cédula ya fue registrada por otro encuestador. No se puede registrar dos veces.");
+          if (error.code === "42501") return err("Su cuenta no puede enviar registros. Hable con el administrador.");
+          return err(/fetch|network/i.test(error.message || "") ? sinRed : "No se pudo enviar. Intente otra vez.");
+        }
+        try { if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(" "); } catch (_) {}
+        st = {}; step = "hecho"; return true;
+      }},
+    hecho: { btn: "Registrar otra persona", html: () => `
+      <div class="done"><div class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></div>
+      <h2>Registro enviado</h2><p class="small">Quedó guardado y el administrador ya lo puede ver.</p><div class="counter" id="cuenta">…</div><p class="small">personas verificadas hoy por usted</p></div>
+      <div class="ql">Sus verificados de hoy</div><div id="hoyLista" style="display:grid;gap:6px"><p class="small">Cargando…</p></div>`,
+      after: async () => {
+        const { data, error } = await sb.from("registros").select("nombre,resultado,creado").eq("encuestador_id", yo.id).order("creado", { ascending: false }).limit(200);
+        if (error) { $("hoyLista").innerHTML = `<p class="small">${sinRed}</p>`; return; }
+        $("cuenta").textContent = data.length;
+        $("hoyLista").innerHTML = data.slice(0, 20).map(x => `<div class="opt" style="cursor:default;justify-content:space-between"><span>${esc(x.nombre)}</span><span class="small">${(RES.find(r => r.v === x.resultado) || {}).i || ""} ${fFecha(x.creado)}</span></div>`).join("") || `<p class="small">Todavía nada.</p>`;
+      },
+      go: async () => { st = {}; step = "datos"; return true; }},
+    aviso: { btn: "Volver a entrar", html: () => `<div class="step">Aviso</div><h2>${esc(st.avisoT)}</h2><p class="small">${esc(st.avisoP)}</p>`,
+      go: async () => { st = {}; step = "entrar"; return true; }}
+  };
+
+  const ORDEN = ["entrar", "pin", "datos", "verif", "hecho", "aviso"];
+  function show() {
+    const s = S[step]; $("screen").innerHTML = s.html(); if (s.after) s.after();
+    $("next").textContent = s.btn;
+    $("back").hidden = step !== "verif";
+    $("bar").style.width = ({ datos: 50, verif: 100, hecho: 100 }[step] || 0) + "%";
+    $("logout").hidden = !(yo && (step === "datos" || step === "hecho" || step === "pin"));
+    $("screen").scrollTop = 0;
+  }
+  async function despuesDeEntrar() {
+    try { yo = await miFicha(); } catch (e) { return err(sinRed); }
+    if (!yo) { await sb.auth.signOut(); st.avisoT = "Esta cuenta no está registrada"; st.avisoP = "Pida al administrador que lo agregue como encuestador."; step = "aviso"; return true; }
+    if (yo.estado === "bloqueado") { await sb.auth.signOut(); yo = null; st.avisoT = "Su acceso está bloqueado"; st.avisoP = "Hable con el administrador."; step = "aviso"; return true; }
+    quien();
+    step = yo.estado === "pendiente" ? "pin" : "datos"; return true;
+  }
+  $("next").addEventListener("click", async () => {
+    if (ocupado) return; ocupado = true; const b = $("next"), t = b.textContent; b.disabled = true; b.textContent = "Un momento…";
+    let ok = false; try { ok = await S[step].go(); } catch (e) { err(sinRed); }
+    b.disabled = false; b.textContent = t; ocupado = false;
+    if (ok) { show(); $("app").scrollIntoView({ block: "start", behavior: "smooth" }); }
+  });
+  $("back").addEventListener("click", () => { if (step === "verif") { step = "datos"; show(); } });
+  $("app").addEventListener("submit", e => e.preventDefault());
+  $("logout").addEventListener("click", async () => {
+    try { await sb.auth.signOut(); } catch (e) {}
+    try { localStorage.removeItem(REC); } catch (e) {}
+    yo = null; st = {}; quien(); sb = crearCliente(); step = "entrar"; show();
+  });
+
+  // ===== Al abrir la app =====
+  (async () => {
+    $("screen").innerHTML = `<p class="small">Cargando…</p>`;
+    try { const t = +localStorage.getItem(REC); if (t && Date.now() - t > DIAS * 864e5) { localStorage.removeItem(REC); localStorage.removeItem("cv-sesion"); sb = crearCliente(); } } catch (e) {}
+    let ses = null; try { ses = (await sb.auth.getSession()).data.session; } catch (e) {}
+    if (ses) { step = "entrar"; const ok = await despuesDeEntrar(); if (ok !== true) step = "entrar"; } else step = "entrar";
+    show();
+  })();
+
+  // ===== Botón "atrás" del celular: preguntar antes de salir =====
+  (function () {
+    let armado = false, saliendo = false;
+    const enCurso = () => step === "verif" || (step === "datos" && !!(st.nom || st.cedP || st.tel));
+    function armar() { if (armado || saliendo || !$("salir").hidden) return; armado = true; try { history.pushState({ cv: 1 }, ""); } catch (e) {} }
+    document.addEventListener("pointerdown", armar, true);
+    document.addEventListener("keydown", armar, true);
+    addEventListener("popstate", () => {
+      if (saliendo) return; armado = false;
+      $("salirP").textContent = enCurso() ? "Tiene un registro sin enviar. Si sale ahora, se pierde." : "Puede volver a entrar cuando quiera.";
+      $("salir").hidden = false; $("salirNo").focus();
+    });
+    $("salirNo").addEventListener("click", () => { $("salir").hidden = true; armar(); });
+    $("salirSi").addEventListener("click", () => {
+      saliendo = true; $("salir").hidden = true; history.back();
+      setTimeout(() => { try { window.close(); } catch (e) {}
+        $("salirT").textContent = "Puede cerrar esta pestaña";
+        $("salirP").textContent = "Para salir, cierre la pestaña o la aplicación. Si quiere seguir, toque Volver.";
+        $("salirSi").hidden = true; $("salirNo").textContent = "Volver"; $("salir").hidden = false;
+        $("salirNo").onclick = () => { saliendo = false; $("salirSi").hidden = false; $("salirNo").textContent = "Quedarme"; $("salirT").textContent = "¿Desea salir de la aplicación?"; $("salir").hidden = true; armar(); };
+      }, 600);
+    });
+    addEventListener("beforeunload", e => { if (enCurso() && !saliendo) { e.preventDefault(); e.returnValue = ""; } });
+  })();
+})();
+
+</script>
+
+</body>
+</html>
